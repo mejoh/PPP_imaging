@@ -15,4 +15,82 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(tidyverse)
+library(GGally)
+```
+
+```{r}
+df_ba_covs <- read_csv('/project/3022026.01/pep/ClinVars_10-08-2023/derivatives/merged_manipulated_2024-07-17.csv',
+                       col_select = all_of(c('pseudonym','ParticipantType','TimepointNr','Age',
+                                             'Gender','NpsEducYears','YearsSinceDiag','PrefHand'))) %>%
+  filter(ParticipantType == 'PD_POM',
+         TimepointNr == 0) %>%
+  mutate(Gender=if_else(Gender=='Female',0,1))
+
+source("/home/sysneu/marjoh/scripts/PPP_imaging/R/functions/retrieve_resphand.R")
+resphand <- retrieve_resphand() %>% rename(ParticipantType=Group) %>% filter(str_detect(Timepoint,'Visit1'))
+df_ba_covs <- df_ba_covs %>%
+  left_join(., resphand, by = c('pseudonym','ParticipantType')) %>%
+  mutate(RespHandIsDominant = if_else(RespondingHand == PrefHand | PrefHand == 'NoPref',1,0)) %>%
+  select(-c(PrefHand,RespondingHand,Timepoint))
+
+df_clin <- read_csv('/project/3022026.01/pep/ClinVars_10-08-2023/derivatives/merged_manipulated_2024-07-17.csv',
+                    col_select = c('pseudonym','ParticipantType','TimepointNr',
+                                   'Up3OnBradySum','z_MoCA__total', 'LEDD')) %>%
+  filter(ParticipantType == 'PD_POM',
+         TimepointNr != 1) %>%
+  pivot_wider(id_cols = c('pseudonym','ParticipantType'),
+              names_from = 'TimepointNr',
+              values_from = c('Up3OnBradySum','z_MoCA__total', 'LEDD'),
+              names_prefix = 'T') %>%
+  mutate(Up3OnBradySum_Delta = Up3OnBradySum_T2 - Up3OnBradySum_T0,
+         z_MoCA__total_Delta = z_MoCA__total_T2 - z_MoCA__total_T0,
+         LEDD_Delta = LEDD_T2 - LEDD_T0)
+# Add covariates and clinical variables
+df_clin <- df_clin %>%
+  left_join(., df_ba_covs[,1:8], by=c('pseudonym','ParticipantType'))
+# Select variables
+df_clin_s <- df_clin %>%
+  select(pseudonym,Age,Gender,NpsEducYears,YearsSinceDiag,RespHandIsDominant,
+         Up3OnBradySum_Delta,Up3OnBradySum_T0,
+         z_MoCA__total_Delta,z_MoCA__total_T0,
+         LEDD_Delta, LEDD_T0)
+# Impute missing values
+isna <- apply(df_clin_s, 2, is.na) %>% colSums()
+missing_perc <- round(isna/nrow(df_clin_s), digits = 3)*100
+print(missing_perc)
+df_clin_s_imp <- df_clin_s %>%
+  mice(m=round(5*missing_perc[names(missing_perc)=='Up3OnBradySum_Delta']),
+       maxit = 10,
+       method='pmm',
+       seed=157,
+       print=FALSE) %>%
+  complete() %>%
+  as_tibble()
+
+df_putamen <- read_csv('/project/3024006.02/Analyses/motor_task/Group/Longitudinal/APvsPP/putamen_activity.csv')
+df <- df_clin_s_imp %>%
+  left_join(df_putamen, by = 'pseudonym')
+```
+
+```{r}
+cols <- c('Up3OnBradySum_Delta','z_MoCA__total_Delta','LEDD_Delta',
+          'con_0007_delta_p','con_0007_delta_a',
+          'con_0007_delta_p_r','con_0007_delta_a_r',
+          'con_0007_delta_p_l','con_0007_delta_a_l')
+cols <- c('Up3OnBradySum_Delta','z_MoCA__total_Delta','LEDD_Delta',
+          'con_0010_delta_p','con_0010_delta_a',
+          'con_0010_delta_p_r','con_0010_delta_a_r',
+          'con_0010_delta_p_l','con_0010_delta_a_l')
+g <- df %>%
+  select(all_of(cols)) %>%
+  na.omit() %>%
+  ggpairs(lower = list(continuous = wrap('smooth', alpha = 0.5, size = 0.5)),
+          upper = list(continuous = wrap('cor', size = 3))) +
+  theme_bw() +
+  theme(legend.position = 'none')
+print(g)
+```
+
 
