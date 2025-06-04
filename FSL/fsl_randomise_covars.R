@@ -1,23 +1,30 @@
+# fsl_randomise_covars
 #
+# Generate files required to build design matrices for randomise:
+# - File with full paths to images used for merging
+# - File with demeaned covariates
+# - File with contrast matrix
+#
+# Files are generated to run the following analyses:
+#
+# - Two-sample t-test comparing HC and PD
+# - One-sample t-test testing clinical correlations
 
 # Generates output files for complete case analyses (i.e., only subjects that have both sessions)
 fsl_randomise_covars <- function(condir1, condir2, condir3, csvfile, outputdir, exclude=NULL){
     
     library(tidyverse)
     library(mice)
-    library(miceadds)
-    library(MatchIt)
+    #library(miceadds)
+    #library(MatchIt)
     
     dir.create(outputdir, showWarnings = F, recursive = T)
     
     # Initialize data frame
     imgs = list.files(condir1)
-    imgs_fp = list.files(condir1,full.names = T) %>%
-        str_replace('P:','/project')
-    imgs2_fp = list.files(condir2,full.names = T) %>%
-        str_replace('P:','/project')
-    imgs3_fp = list.files(condir3,full.names = T) %>%
-        str_replace('P:','/project')
+    imgs_fp = list.files(condir1,full.names = T)
+    imgs2_fp = list.files(condir2,full.names = T)
+    imgs3_fp = list.files(condir3,full.names = T)
     group = str_sub(imgs, start = 1, end = 6)
     pseudonym = str_sub(imgs, start = 8, end = 31)
     dfinit <- tibble(pseudonym=pseudonym,ParticipantType=group,imgs=imgs,imgs_fp=imgs_fp,imgs2_fp,imgs3_fp)
@@ -36,7 +43,7 @@ fsl_randomise_covars <- function(condir1, condir2, condir3, csvfile, outputdir, 
                TimepointNr == 0) %>%
         mutate(Gender=if_else(Gender=='Female',0,1))
     
-    source("M:/scripts/Personalized-Parkinson-Project-Motor/R/functions/retrieve_resphand.R")
+    source("/home/sysneu/marjoh/scripts/Personalized-Parkinson-Project-Motor/R/functions/retrieve_resphand.R")
     resphand <- retrieve_resphand() %>% rename(ParticipantType=Group) %>% filter(str_detect(Timepoint,'Visit1'))
     baseline_covars <- baseline_covars %>%
         left_join(., resphand, by = c('pseudonym','ParticipantType')) %>%
@@ -127,15 +134,30 @@ fsl_randomise_covars <- function(condir1, condir2, condir3, csvfile, outputdir, 
     # tmp %>% select(-vxlEV) %>% write_delim(., paste0(outputdir, '/posthoc_gPD__covs__delta_unpaired_ttest_matched.txt'), col_names = F)
     
     # Contrasts
-    
     rbind(c(1,-1,0,0,0,0,0),
-          c(-1,1,0,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__unpaired_ttest_vxlEV.txt'),col.names=F,row.names=F,quote=F)
+          c(-1,1,0,0,0,0,0),
+          c(0,0,0,1,0,0,0),
+          c(0,0,0,-1,0,0,0),
+          c(0,0,0,0,1,0,0),
+          c(0,0,0,0,-1,0,0)) %>% write.table(., paste0(outputdir, '/cons__unpaired_ttest_vxlEV.txt'),col.names=F,row.names=F,quote=F)
     rbind(c(1,-1,0,0,0,0),
-          c(-1,1,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__unpaired_ttest.txt'),col.names=F,row.names=F,quote=F)
+          c(-1,1,0,0,0,0),
+          c(0,0,0,1,0,0),
+          c(0,0,0,-1,0,0),
+          c(0,0,0,0,1,0),
+          c(0,0,0,0,-1,0)) %>% write.table(., paste0(outputdir, '/cons__unpaired_ttest.txt'),col.names=F,row.names=F,quote=F)
     rbind(c(1,0,0,0,0,0),
-          c(-1,0,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__singlegroup_ttest_vxlEV.txt'),col.names=F,row.names=F,quote=F)
+          c(-1,0,0,0,0,0),
+          c(0,0,0,1,0,0),
+          c(0,0,0,-1,0,0),
+          c(0,0,0,0,1,0),
+          c(0,0,0,0,-1,0)) %>% write.table(., paste0(outputdir, '/cons__singlegroup_ttest_vxlEV.txt'),col.names=F,row.names=F,quote=F)
     rbind(c(1,0,0,0,0),
-          c(-1,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__singlegroup_ttest.txt'),col.names=F,row.names=F,quote=F)
+          c(-1,0,0,0,0),
+          c(0,0,0,1,0),
+          c(0,0,0,-1,0),
+          c(0,0,0,0,1),
+          c(0,0,0,0,-1)) %>% write.table(., paste0(outputdir, '/cons__singlegroup_ttest.txt'),col.names=F,row.names=F,quote=F)
     
     ## One-sample t-test: clinical correlations
     # Initialize clinical data
@@ -300,7 +322,13 @@ fsl_randomise_covars <- function(condir1, condir2, condir3, csvfile, outputdir, 
     rbind(c(1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
           c(-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
           c(0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
-          c(0,0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__delta_clincorr_all_vxlEV_AddCov2.txt'),col.names=F,row.names=F,quote=F)
+          c(0,0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,-1,0,0,0,0,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,0,0,0,-1,0,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,0,0,0,0,-1,0,0,0,0,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__delta_clincorr_all_vxlEV_AddCov2.txt'),col.names=F,row.names=F,quote=F)
     # rbind(c(1,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
     #       c(-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
     #       c(0,0,1,0,0,0,0,0,0,0,0,0,0,0,0),
@@ -308,7 +336,13 @@ fsl_randomise_covars <- function(condir1, condir2, condir3, csvfile, outputdir, 
     rbind(c(1,0,0,0,0,0,0,0,0,0,0,0,0),
           c(-1,0,0,0,0,0,0,0,0,0,0,0,0),
           c(0,0,1,0,0,0,0,0,0,0,0,0,0),
-          c(0,0,-1,0,0,0,0,0,0,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__delta_clincorr_all_vxlEV.txt'),col.names=F,row.names=F,quote=F)
+          c(0,0,-1,0,0,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,1,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,-1,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,0,0,0,1,0,0,0,0,0),
+          c(0,0,0,0,0,0,0,-1,0,0,0,0,0),
+          c(0,0,0,0,0,0,0,0,1,0,0,0,0),
+          c(0,0,0,0,0,0,0,0,-1,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__delta_clincorr_all_vxlEV.txt'),col.names=F,row.names=F,quote=F)
     # rbind(c(1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
     #       c(-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
     #       c(0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
@@ -316,7 +350,13 @@ fsl_randomise_covars <- function(condir1, condir2, condir3, csvfile, outputdir, 
     rbind(c(1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
           c(-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
           c(0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0),
-          c(0,0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__delta_clincorr_all_AddCov2.txt'),col.names=F,row.names=F,quote=F)
+          c(0,0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,-1,0,0,0,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,0,0,0,-1,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0),
+          c(0,0,0,0,0,0,0,0,-1,0,0,0,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__delta_clincorr_all_AddCov2.txt'),col.names=F,row.names=F,quote=F)
     # rbind(c(1,0,0,0,0,0,0,0,0,0,0,0,0,0),
     #       c(-1,0,0,0,0,0,0,0,0,0,0,0,0,0),
     #       c(0,0,1,0,0,0,0,0,0,0,0,0,0,0),
@@ -324,17 +364,35 @@ fsl_randomise_covars <- function(condir1, condir2, condir3, csvfile, outputdir, 
     rbind(c(1,0,0,0,0,0,0,0,0,0,0,0),
           c(-1,0,0,0,0,0,0,0,0,0,0,0),
           c(0,0,1,0,0,0,0,0,0,0,0,0),
-          c(0,0,-1,0,0,0,0,0,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__delta_clincorr_all.txt'),col.names=F,row.names=F,quote=F)
+          c(0,0,-1,0,0,0,0,0,0,0,0,0),
+          c(0,0,0,0,1,0,0,0,0,0,0,0),
+          c(0,0,0,0,-1,0,0,0,0,0,0,0),
+          c(0,0,0,0,0,0,0,1,0,0,0,0),
+          c(0,0,0,0,0,0,0,-1,0,0,0,0),
+          c(0,0,0,0,0,0,0,0,1,0,0,0),
+          c(0,0,0,0,0,0,0,0,-1,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__delta_clincorr_all.txt'),col.names=F,row.names=F,quote=F)
     rbind(c(1,0,0,0,0,0,0,0,0),
-          c(-1,0,0,0,0,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__delta_clincorr_one_vxlEV.txt'),col.names=F,row.names=F,quote=F)
+          c(-1,0,0,0,0,0,0,0,0),
+          c(0,0,0,1,0,0,0,0,0),
+          c(0,0,0,-1,0,0,0,0,0),
+          c(0,0,0,0,1,0,0,0,0),
+          c(0,0,0,0,-1,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__delta_clincorr_one_vxlEV.txt'),col.names=F,row.names=F,quote=F)
     rbind(c(1,0,0,0,0,0,0,0),
-          c(-1,0,0,0,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__delta_clincorr_one.txt'),col.names=F,row.names=F,quote=F)
+          c(-1,0,0,0,0,0,0,0),
+          c(0,0,0,1,0,0,0,0),
+          c(0,0,0,-1,0,0,0,0),
+          c(0,0,0,0,1,0,0,0),
+          c(0,0,0,0,-1,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__delta_clincorr_one.txt'),col.names=F,row.names=F,quote=F)
     rbind(c(1,0,0,0,0,0,0,0,0),
           c(-1,0,0,0,0,0,0,0,0),
           c(0,1,0,0,0,0,0,0,0),
           c(0,-1,0,0,0,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__ses_clincorr_all.txt'),col.names=F,row.names=F,quote=F)
     rbind(c(1,0,0,0,0,0,0),
-          c(-1,0,0,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__ses_clincorr_one.txt'),col.names=F,row.names=F,quote=F)
+          c(-1,0,0,0,0,0,0),
+          c(0,0,1,0,0,0,0),
+          c(0,0,-1,0,0,0,0),
+          c(0,0,0,1,0,0,0),
+          c(0,0,0,-1,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__ses_clincorr_one.txt'),col.names=F,row.names=F,quote=F)
     
 }
 
@@ -343,14 +401,13 @@ fsl_randomise_covars_byses <- function(condir, csvfile, timepointnr, outputdir, 
     
     library(tidyverse)
     library(mice)
-    library(miceadds)
+    #library(miceadds)
     
     dir.create(outputdir, showWarnings = F, recursive = T)
     
     # Initialize data frame
     imgs = list.files(condir)
-    imgs_fp = list.files(condir,full.names = T) %>%
-        str_replace('P:','/project')
+    imgs_fp = list.files(condir,full.names = T)
     group = str_sub(imgs, start = 1, end = 6)
     pseudonym = str_sub(imgs, start = 8, end = 31)
     dfinit <- tibble(pseudonym=pseudonym,ParticipantType=group,imgs=imgs,imgs_fp=imgs_fp) %>%
@@ -365,7 +422,7 @@ fsl_randomise_covars_byses <- function(condir, csvfile, timepointnr, outputdir, 
                TimepointNr = if_else(ParticipantType=='HC_PIT' & TimepointNr==1, 2, TimepointNr)) %>%
         filter(TimepointNr == 0)
     
-    source("M:/scripts/Personalized-Parkinson-Project-Motor/R/functions/retrieve_resphand.R")
+    source("/home/sysneu/marjoh/scripts/Personalized-Parkinson-Project-Motor/R/functions/retrieve_resphand.R")
     resphand <- retrieve_resphand() %>% 
         rename(ParticipantType=Group) %>% 
         mutate(TimepointNr=if_else(str_detect(Timepoint,'Visit1'),0,2)) %>%
@@ -480,24 +537,24 @@ fsl_randomise_covars_byses <- function(condir, csvfile, timepointnr, outputdir, 
     
 }
 
-csvfile='P:/3022026.01/pep/ClinVars_10-08-2023/derivatives/merged_manipulated_2024-07-17.csv'
+csvfile='/project/3022026.01/pep/ClinVars_10-08-2023/derivatives/merged_manipulated_2024-07-17.csv'
 con=c('con_0007','con_0010')#,'con_0011','con_0012')
 for(i in 1:length(con)){
     # Complete case analyses (only participants with both sessions)
-    condir1=paste0('P:/3024006.02/Analyses/motor_task/Group/', con[i], '/ses-Diff/')
-    condir2=paste0('P:/3024006.02/Analyses/motor_task/Group/', con[i], '/COMPLETE_ses-Visit1/')
-    condir3=paste0('P:/3024006.02/Analyses/motor_task/Group/', con[i], '/COMPLETE_ses-Visit2/')
-    outputdir=paste0('P:/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL/data/', con[i])
+    condir1=paste0('/project/3024006.02/Analyses/motor_task/Group/', con[i], '/ses-Diff/')
+    condir2=paste0('/project/3024006.02/Analyses/motor_task/Group/', con[i], '/COMPLETE_ses-Visit1/')
+    condir3=paste0('/project/3024006.02/Analyses/motor_task/Group/', con[i], '/COMPLETE_ses-Visit2/')
+    outputdir=paste0('/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL/data/', con[i])
     exclude <- c('sub-POMU0E19B895DF700AB0')
     fsl_randomise_covars(condir1, condir2, condir3, csvfile, outputdir, exclude)
     
     # By-session analyses (full number of participants for each session)
-    condir=paste0('P:/3024006.02/Analyses/motor_task/Group/', con[i], '/ses-Visit1/')
+    condir=paste0('/project/3024006.02/Analyses/motor_task/Group/', con[i], '/ses-Visit1/')
     timepointnr=0
-    outputdir=paste0('P:/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL/data/', con[i], '/by_session/ses-Visit1/')
+    outputdir=paste0('/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL/data/', con[i], '/by_session/ses-Visit1/')
     fsl_randomise_covars_byses(condir,csvfile,timepointnr,outputdir)
-    condir=paste0('P:/3024006.02/Analyses/motor_task/Group/', con[i], '/ses-Visit2/')
+    condir=paste0('/project/3024006.02/Analyses/motor_task/Group/', con[i], '/ses-Visit2/')
     timepointnr=2
-    outputdir=paste0('P:/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL/data/', con[i], '/by_session/ses-Visit2/')
+    outputdir=paste0('/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL/data/', con[i], '/by_session/ses-Visit2/')
     fsl_randomise_covars_byses(condir,csvfile,timepointnr,outputdir)
 }
