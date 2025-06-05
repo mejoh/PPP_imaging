@@ -140,14 +140,14 @@ done
 ## Delta: Voxel-wise EV
 DESIGN=delta_unpaired_ttest_unmatched_vxlEV; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 randcmd="${rand} -i ${datadir}/${c}/imgs__delta_unpaired_ttest_unmatched.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__unpaired_ttest_vxlEV.con ${rand_opts} --vxl=7 --vxf=${datadir}/${c}/imgs__ba_unpaired_ttest_unmatched_dmean"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 	DESIGN=posthoc_gHC__covs__delta_unpaired_ttest_unmatched_vxlEV; Text2Vest ${datadir}/${c}/${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 	randcmd="${rand} -1 -i ${datadir}/${c}/posthoc__imgs__delta_unpaired_ttest_unmatched_gHC.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__singlegroup_ttest_vxlEV.con ${rand_opts} --vxl=6 --vxf=${datadir}/${c}/posthoc__imgs__ba_unpaired_ttest_unmatched_dmean_gHC"
-	printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
+	printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 	DESIGN=posthoc_gPD__covs__delta_unpaired_ttest_unmatched_vxlEV; Text2Vest ${datadir}/${c}/${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 	randcmd="${rand} -1 -i ${datadir}/${c}/posthoc__imgs__delta_unpaired_ttest_unmatched_gPD.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__singlegroup_ttest_vxlEV.con ${rand_opts} --vxl=6 --vxf=${datadir}/${c}/posthoc__imgs__ba_unpaired_ttest_unmatched_dmean_gPD"
-	printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
+	printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 # DESIGN=delta_unpaired_ttest_matched_vxlEV; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 # randcmd="${rand} -i ${datadir}/${c}/imgs__delta_unpaired_ttest_matched.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__unpaired_ttest_vxlEV.con ${rand_opts} --vxl=7 --vxf=${datadir}/${c}/imgs__ba_unpaired_ttest_matched_dmean"
@@ -162,7 +162,7 @@ printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 DESIGN=delta_clincorr_all_vxlEV; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/imgs__delta_clincorr.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__delta_clincorr_all_vxlEV.con ${rand_opts} --vxl=13 --vxf=${datadir}/${c}/imgs__ba_clincorr_dmean"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 	# DESIGN=delta_clincorr_all_vxlEV_AddCov1; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 	# randcmd="${rand} -1 -i ${datadir}/${c}/imgs__delta_clincorr.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__delta_clincorr_all_vxlEV_AddCov1.con ${rand_opts} --vxl=13 --vxf=${datadir}/${c}/imgs__ba_clincorr_dmean"
@@ -170,7 +170,7 @@ printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 	DESIGN=delta_clincorr_all_vxlEV_AddCov2; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 	randcmd="${rand} -1 -i ${datadir}/${c}/imgs__delta_clincorr_AddCov2.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__delta_clincorr_all_vxlEV_AddCov2.con ${rand_opts} --vxl=13 --vxf=${datadir}/${c}/imgs__ba_clincorr_AddCov2_dmean"
-	printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
+	printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 	
 	# DESIGN=delta_clincorr_all_vxlEV_AddCov3; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 	# randcmd="${rand} -1 -i ${datadir}/${c}/imgs__delta_clincorr_AddCov3.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__delta_clincorr_all_vxlEV_AddCov3.con ${rand_opts} --vxl=13 --vxf=${datadir}/${c}/imgs__ba_clincorr_AddCov3_dmean"
@@ -178,24 +178,24 @@ printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 DESIGN=delta_clincorr_brady_vxlEV; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/imgs__delta_clincorr.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__delta_clincorr_one_vxlEV.con ${rand_opts} --vxl=9 --vxf=${datadir}/${c}/imgs__ba_clincorr_dmean"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 DESIGN=delta_clincorr_moca_vxlEV; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/imgs__delta_clincorr.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__delta_clincorr_one_vxlEV.con ${rand_opts} --vxl=9 --vxf=${datadir}/${c}/imgs__ba_clincorr_dmean"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 
 ## Delta: Un-adjusted
 DESIGN=delta_unpaired_ttest_unmatched; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 randcmd="${rand} -i ${datadir}/${c}/imgs__delta_unpaired_ttest_unmatched.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__unpaired_ttest.con ${rand_opts}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 	DESIGN=posthoc_gHC__covs__delta_unpaired_ttest_unmatched; Text2Vest ${datadir}/${c}/${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 	randcmd="${rand} -1 -i ${datadir}/${c}/posthoc__imgs__delta_unpaired_ttest_unmatched_gHC.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__singlegroup_ttest.con ${rand_opts}"
-	printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
+	printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 	DESIGN=posthoc_gPD__covs__delta_unpaired_ttest_unmatched; Text2Vest ${datadir}/${c}/${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 	randcmd="${rand} -1 -i ${datadir}/${c}/posthoc__imgs__delta_unpaired_ttest_unmatched_gPD.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__singlegroup_ttest.con ${rand_opts}"
-	printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
+	printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 # DESIGN=delta_unpaired_ttest_matched; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 # randcmd="${rand} -i ${datadir}/${c}/imgs__delta_unpaired_ttest_matched.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__unpaired_ttest.con ${rand_opts}"
@@ -210,7 +210,7 @@ printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 DESIGN=delta_clincorr_all; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/imgs__delta_clincorr.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__delta_clincorr_all.con ${rand_opts}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 	# DESIGN=delta_clincorr_all_AddCov1; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 	# randcmd="${rand} -1 -i ${datadir}/${c}/imgs__delta_clincorr.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__delta_clincorr_all_AddCov1.con ${rand_opts}"
@@ -218,7 +218,7 @@ printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 	DESIGN=delta_clincorr_all_AddCov2; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 	randcmd="${rand} -1 -i ${datadir}/${c}/imgs__delta_clincorr_AddCov2.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__delta_clincorr_all_AddCov2.con ${rand_opts}"
-	printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
+	printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 	
 	# DESIGN=delta_clincorr_all_AddCov3; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 	# randcmd="${rand} -1 -i ${datadir}/${c}/imgs__delta_clincorr_AddCov3.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__delta_clincorr_all_AddCov3.con ${rand_opts}"
@@ -226,18 +226,18 @@ printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 DESIGN=delta_clincorr_brady; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/imgs__delta_clincorr.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__delta_clincorr_one.con ${rand_opts}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 DESIGN=delta_clincorr_moca; Text2Vest ${datadir}/${c}/covs__${DESIGN}.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/imgs__delta_clincorr.nii.gz -o ${statsdir}/${c}/rand_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__delta_clincorr_one.con ${rand_opts}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_${DESIGN}.txt
 
 
 ## Baseline 
 ### complete case
 DESIGN=unpaired_ttest_unmatched; Text2Vest ${datadir}/${c}/covs__delta_unpaired_ttest_unmatched.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 randcmd="${rand} -i ${datadir}/${c}/imgs__ba_unpaired_ttest_unmatched.nii.gz -o ${statsdir}/${c}/rand_ba_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__unpaired_ttest.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_ba_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_ba_${DESIGN}.txt
 
 # DESIGN=unpaired_ttest_matched; Text2Vest ${datadir}/${c}/covs__delta_unpaired_ttest_matched.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 # randcmd="${rand} -i ${datadir}/${c}/imgs__ba_unpaired_ttest_matched.nii.gz -o ${statsdir}/${c}/rand_ba_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__unpaired_ttest.con ${rand_opts2}"
@@ -245,38 +245,38 @@ printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_ba_${DESIGN}.txt
 
 DESIGN=clincorr_all; Text2Vest ${datadir}/${c}/covs__ba_${DESIGN}.txt ${designsdir}/${c}/covs__ba_${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/imgs__ba_clincorr.nii.gz -o ${statsdir}/${c}/rand_ba_${DESIGN} -d ${designsdir}/${c}/covs__ba_${DESIGN}.mat -t ${designsdir}/cons__ses_clincorr_all.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_ba_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_ba_${DESIGN}.txt
 
 DESIGN=clincorr_brady; Text2Vest ${datadir}/${c}/covs__ba_${DESIGN}.txt ${designsdir}/${c}/covs__ba_${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/imgs__ba_clincorr.nii.gz -o ${statsdir}/${c}/rand_ba_${DESIGN} -d ${designsdir}/${c}/covs__ba_${DESIGN}.mat -t ${designsdir}/cons__ses_clincorr_one.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_ba_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_ba_${DESIGN}.txt
 
 DESIGN=clincorr_moca; Text2Vest ${datadir}/${c}/covs__ba_${DESIGN}.txt ${designsdir}/${c}/covs__ba_${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/imgs__ba_clincorr.nii.gz -o ${statsdir}/${c}/rand_ba_${DESIGN} -d ${designsdir}/${c}/covs__ba_${DESIGN}.mat -t ${designsdir}/cons__ses_clincorr_one.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_ba_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_ba_${DESIGN}.txt
 
 ### full sample
 DESIGN=unpaired_ttest_unmatched; Text2Vest ${datadir}/${c}/by_session/ses-Visit1/covs__${DESIGN}.txt ${designsdir}/${c}/by_session/ses-Visit1/covs__${DESIGN}.mat
 randcmd="${rand} -i ${datadir}/${c}/by_session/ses-Visit1/imgs__unpaired_ttest_unmatched.nii.gz -o ${statsdir}/${c}/by_session/ses-Visit1/rand_ba_${DESIGN} -d ${designsdir}/${c}/by_session/ses-Visit1/covs__${DESIGN}.mat -t ${designsdir}/cons__unpaired_ttest.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit1/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit1/cmd_rand_${DESIGN}.txt
 
 DESIGN=clincorr_all; Text2Vest ${datadir}/${c}/by_session/ses-Visit1/covs__${DESIGN}.txt ${designsdir}/${c}/by_session/ses-Visit1/covs__${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/by_session/ses-Visit1/imgs__clincorr.nii.gz -o ${statsdir}/${c}/by_session/ses-Visit1/rand_ba_${DESIGN} -d ${designsdir}/${c}/by_session/ses-Visit1/covs__${DESIGN}.mat -t ${designsdir}/cons__ses_clincorr_all.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit1/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit1/cmd_rand_${DESIGN}.txt
 
 DESIGN=clincorr_brady; Text2Vest ${datadir}/${c}/by_session/ses-Visit1/covs__${DESIGN}.txt ${designsdir}/${c}/by_session/ses-Visit1/covs__${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/by_session/ses-Visit1/imgs__clincorr.nii.gz -o ${statsdir}/${c}/by_session/ses-Visit1/rand_ba_${DESIGN} -d ${designsdir}/${c}/by_session/ses-Visit1/covs__${DESIGN}.mat -t ${designsdir}/cons__ses_clincorr_one.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit1/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit1/cmd_rand_${DESIGN}.txt
 
 DESIGN=clincorr_moca; Text2Vest ${datadir}/${c}/by_session/ses-Visit1/covs__${DESIGN}.txt ${designsdir}/${c}/by_session/ses-Visit1/covs__${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/by_session/ses-Visit1/imgs__clincorr.nii.gz -o ${statsdir}/${c}/by_session/ses-Visit1/rand_ba_${DESIGN} -d ${designsdir}/${c}/by_session/ses-Visit1/covs__${DESIGN}.mat -t ${designsdir}/cons__ses_clincorr_one.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit1/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit1/cmd_rand_${DESIGN}.txt
 
 ## Follow-up 
 ### complete case
 DESIGN=unpaired_ttest_unmatched; Text2Vest ${datadir}/${c}/covs__delta_unpaired_ttest_unmatched.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 randcmd="${rand} -i ${datadir}/${c}/imgs__fu_unpaired_ttest_unmatched.nii.gz -o ${statsdir}/${c}/rand_fu_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__unpaired_ttest.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_fu_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_fu_${DESIGN}.txt
 
 # DESIGN=unpaired_ttest_matched; Text2Vest ${datadir}/${c}/covs__delta_unpaired_ttest_matched.txt ${designsdir}/${c}/covs__${DESIGN}.mat
 # randcmd="${rand} -i ${datadir}/${c}/imgs__fu_unpaired_ttest_matched.nii.gz -o ${statsdir}/${c}/rand_fu_${DESIGN} -d ${designsdir}/${c}/covs__${DESIGN}.mat -t ${designsdir}/cons__unpaired_ttest.con ${rand_opts2}"
@@ -284,32 +284,32 @@ printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_fu_${DESIGN}.txt
 
 DESIGN=clincorr_all; Text2Vest ${datadir}/${c}/covs__fu_${DESIGN}.txt ${designsdir}/${c}/covs__fu_${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/imgs__fu_clincorr.nii.gz -o ${statsdir}/${c}/rand_fu_${DESIGN} -d ${designsdir}/${c}/covs__fu_${DESIGN}.mat -t ${designsdir}/cons__ses_clincorr_all.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_fu_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_fu_${DESIGN}.txt
 
 DESIGN=clincorr_brady; Text2Vest ${datadir}/${c}/covs__fu_${DESIGN}.txt ${designsdir}/${c}/covs__fu_${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/imgs__fu_clincorr.nii.gz -o ${statsdir}/${c}/rand_fu_${DESIGN} -d ${designsdir}/${c}/covs__fu_${DESIGN}.mat -t ${designsdir}/cons__ses_clincorr_one.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_fu_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_fu_${DESIGN}.txt
 
 DESIGN=clincorr_moca; Text2Vest ${datadir}/${c}/covs__fu_${DESIGN}.txt ${designsdir}/${c}/covs__fu_${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/imgs__fu_clincorr.nii.gz -o ${statsdir}/${c}/rand_fu_${DESIGN} -d ${designsdir}/${c}/covs__fu_${DESIGN}.mat -t ${designsdir}/cons__ses_clincorr_one.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_fu_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/cmd_rand_fu_${DESIGN}.txt
 
 ### full sample
 DESIGN=unpaired_ttest_unmatched; Text2Vest ${datadir}/${c}/by_session/ses-Visit2/covs__${DESIGN}.txt ${designsdir}/${c}/by_session/ses-Visit2/covs__${DESIGN}.mat
 randcmd="${rand} -i ${datadir}/${c}/by_session/ses-Visit2/imgs__unpaired_ttest_unmatched.nii.gz -o ${statsdir}/${c}/by_session/ses-Visit2/rand_fu_${DESIGN} -d ${designsdir}/${c}/by_session/ses-Visit2/covs__${DESIGN}.mat -t ${designsdir}/cons__unpaired_ttest.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit2/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit2/cmd_rand_${DESIGN}.txt
 
 DESIGN=clincorr_all; Text2Vest ${datadir}/${c}/by_session/ses-Visit2/covs__${DESIGN}.txt ${designsdir}/${c}/by_session/ses-Visit2/covs__${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/by_session/ses-Visit2/imgs__clincorr.nii.gz -o ${statsdir}/${c}/by_session/ses-Visit2/rand_fu_${DESIGN} -d ${designsdir}/${c}/by_session/ses-Visit2/covs__${DESIGN}.mat -t ${designsdir}/cons__ses_clincorr_all.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit2/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit2/cmd_rand_${DESIGN}.txt
 
 DESIGN=clincorr_brady; Text2Vest ${datadir}/${c}/by_session/ses-Visit2/covs__${DESIGN}.txt ${designsdir}/${c}/by_session/ses-Visit2/covs__${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/by_session/ses-Visit2/imgs__clincorr.nii.gz -o ${statsdir}/${c}/by_session/ses-Visit2/rand_fu_${DESIGN} -d ${designsdir}/${c}/by_session/ses-Visit2/covs__${DESIGN}.mat -t ${designsdir}/cons__ses_clincorr_one.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit2/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit2/cmd_rand_${DESIGN}.txt
 
 DESIGN=clincorr_moca; Text2Vest ${datadir}/${c}/by_session/ses-Visit2/covs__${DESIGN}.txt ${designsdir}/${c}/by_session/ses-Visit2/covs__${DESIGN}.mat
 randcmd="${rand} -1 -i ${datadir}/${c}/by_session/ses-Visit2/imgs__clincorr.nii.gz -o ${statsdir}/${c}/by_session/ses-Visit2/rand_fu_${DESIGN} -d ${designsdir}/${c}/by_session/ses-Visit2/covs__${DESIGN}.mat -t ${designsdir}/cons__ses_clincorr_one.con ${rand_opts2}"
-printf "\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit2/cmd_rand_${DESIGN}.txt
+printf ""#!/bin/bash"\n${randcmd}\n\n" > ${statsdir}/${c}/by_session/ses-Visit2/cmd_rand_${DESIGN}.txt
 
 done
 

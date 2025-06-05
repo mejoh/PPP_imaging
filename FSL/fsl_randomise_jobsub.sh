@@ -15,18 +15,19 @@ for s in ${ses[@]}; do
 
 		JNAME=`basename -- "${jobscripts[i]}" .txt`
 
-		qsub \
-			-o ${logsdir} \
-			-e ${logsdir} \
-			-N "rand_${s}_${JNAME}" \
-			-l "nodes=1:ppn=2,walltime=30:00:00,mem=12gb" \
-			${jobscripts[i]}
+		#qsub \
+		#	-o ${logsdir} \
+		#	-e ${logsdir} \
+		#	-N "rand_${s}_${JNAME}" \
+		#	-l "nodes=1:ppn=2,walltime=30:00:00,mem=12gb" \
+		#	${jobscripts[i]}
 			
-		# sbatch \
-			# -o ${logsdir} \
-			# -J "rand_${s}_${JNAME}" \
-			# --nodes=1 --cpus-per-task 2 --ntasks-per-node=1 --mem=12G --time=30:00:00 \
-			# ${jobscripts[i]}
+		sbatch \
+			--output ${logsdir}/job.rand.%A_%a.out \
+			--error ${logsdir}/job.rand.%A_%a.err \
+			--job-name "rand_${s}_${JNAME}" \
+			--nodes=1 --cpus-per-task 2 --ntasks-per-node=1 --mem=12G --time=30:00:00 \
+			${jobscripts[i]}
 			
 
 	done

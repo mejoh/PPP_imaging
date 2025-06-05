@@ -148,16 +148,16 @@ fsl_randomise_covars <- function(condir1, condir2, condir3, csvfile, outputdir, 
           c(0,0,0,0,-1,0)) %>% write.table(., paste0(outputdir, '/cons__unpaired_ttest.txt'),col.names=F,row.names=F,quote=F)
     rbind(c(1,0,0,0,0,0),
           c(-1,0,0,0,0,0),
+          c(0,0,1,0,0,0),
+          c(0,0,-1,0,0,0),
           c(0,0,0,1,0,0),
-          c(0,0,0,-1,0,0),
-          c(0,0,0,0,1,0),
-          c(0,0,0,0,-1,0)) %>% write.table(., paste0(outputdir, '/cons__singlegroup_ttest_vxlEV.txt'),col.names=F,row.names=F,quote=F)
+          c(0,0,0,-1,0,0)) %>% write.table(., paste0(outputdir, '/cons__singlegroup_ttest_vxlEV.txt'),col.names=F,row.names=F,quote=F)
     rbind(c(1,0,0,0,0),
           c(-1,0,0,0,0),
+          c(0,0,1,0,0),
+          c(0,0,-1,0,0),
           c(0,0,0,1,0),
-          c(0,0,0,-1,0),
-          c(0,0,0,0,1),
-          c(0,0,0,0,-1)) %>% write.table(., paste0(outputdir, '/cons__singlegroup_ttest.txt'),col.names=F,row.names=F,quote=F)
+          c(0,0,0,-1,0)) %>% write.table(., paste0(outputdir, '/cons__singlegroup_ttest.txt'),col.names=F,row.names=F,quote=F)
     
     ## One-sample t-test: clinical correlations
     # Initialize clinical data
@@ -386,7 +386,13 @@ fsl_randomise_covars <- function(condir1, condir2, condir3, csvfile, outputdir, 
     rbind(c(1,0,0,0,0,0,0,0,0),
           c(-1,0,0,0,0,0,0,0,0),
           c(0,1,0,0,0,0,0,0,0),
-          c(0,-1,0,0,0,0,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__ses_clincorr_all.txt'),col.names=F,row.names=F,quote=F)
+          c(0,-1,0,0,0,0,0,0,0),
+          c(0,0,1,0,0,0,0,0,0),
+          c(0,0,-1,0,0,0,0,0,0),
+          c(0,0,0,0,1,0,0,0,0),
+          c(0,0,0,0,-1,0,0,0,0),
+          c(0,0,0,0,0,1,0,0,0),
+          c(0,0,0,0,0,-1,0,0,0)) %>% write.table(., paste0(outputdir, '/cons__ses_clincorr_all.txt'),col.names=F,row.names=F,quote=F)
     rbind(c(1,0,0,0,0,0,0),
           c(-1,0,0,0,0,0,0),
           c(0,0,1,0,0,0,0),
