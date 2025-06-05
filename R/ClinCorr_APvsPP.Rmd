@@ -15,82 +15,218 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+# Do motor symptoms and their progression depend more on activation in the anterior compared to the posterior putamen?
+
+## Methodology
+
+- Carry out everything up until the 1st-level analysis.
+- Extract selection- and motor-related activation from the putamen, parcellated
+into anterior, posterior, left, and right. In our case, due to the horizontal
+flipping of contrast images, left is most affected whereas right is least
+affected.
+whereas
+- Test whether correlations with motor progression differ for anterior and posterior beta estimates.
+- Test for PROGRESSION x ANTERIOR/POSTERIOR x LEFT/RIGHT interactions on 2-year change in beta estimates.
+- Also for SEVERITY x ANTERIOR/POSTERIOR x LEFT/RIGHT interactions on beta estimates.
+
+## Load libraries
+
+```{r, echo=F,warning=F,message=F}
 library(tidyverse)
 library(GGally)
+library(mice)
+library(cocor)
+library(car)
+library(lme4)
+library(ggeffects)
 ```
 
-```{r}
-df_ba_covs <- read_csv('/project/3022026.01/pep/ClinVars_10-08-2023/derivatives/merged_manipulated_2024-07-17.csv',
-                       col_select = all_of(c('pseudonym','ParticipantType','TimepointNr','Age',
-                                             'Gender','NpsEducYears','YearsSinceDiag','PrefHand'))) %>%
-  filter(ParticipantType == 'PD_POM',
-         TimepointNr == 0) %>%
-  mutate(Gender=if_else(Gender=='Female',0,1))
+## Load data
 
-source("/home/sysneu/marjoh/scripts/PPP_imaging/R/functions/retrieve_resphand.R")
-resphand <- retrieve_resphand() %>% rename(ParticipantType=Group) %>% filter(str_detect(Timepoint,'Visit1'))
-df_ba_covs <- df_ba_covs %>%
-  left_join(., resphand, by = c('pseudonym','ParticipantType')) %>%
-  mutate(RespHandIsDominant = if_else(RespondingHand == PrefHand | PrefHand == 'NoPref',1,0)) %>%
-  select(-c(PrefHand,RespondingHand,Timepoint))
+```{r, echo=F,warning=F,message=F}
+# df_ba_covs <- read_csv('/Volumes/project/3022026.01/pep/ClinVars_10-08-2023/derivatives/merged_manipulated_2024-07-17.csv',
+#                        col_select = all_of(c('pseudonym','ParticipantType','TimepointNr','Age',
+#                                              'Gender','NpsEducYears','YearsSinceDiag','PrefHand'))) %>%
+#   filter(ParticipantType == 'PD_POM',
+#          TimepointNr == 0) %>%
+#   mutate(Gender=if_else(Gender=='Female',0,1))
+# 
+# source("/Users/marjoh/Documents/work/code/PPP_imaging/R/functions/retrieve_resphand.R")
+# resphand <- retrieve_resphand() %>% rename(ParticipantType=Group) %>% filter(str_detect(Timepoint,'Visit1'))
+# df_ba_covs <- df_ba_covs %>%
+#   left_join(., resphand, by = c('pseudonym','ParticipantType')) %>%
+#   mutate(RespHandIsDominant = if_else(RespondingHand == PrefHand | PrefHand == 'NoPref',1,0)) %>%
+#   select(-c(PrefHand,RespondingHand,Timepoint))
+# 
+# df_clin <- read_csv('/Volumes/project/3022026.01/pep/ClinVars_10-08-2023/derivatives/merged_manipulated_2024-07-17.csv',
+#                     col_select = c('pseudonym','ParticipantType','TimepointNr',
+#                                    'Up3OnBradySum','z_MoCA__total', 'LEDD')) %>%
+#   filter(ParticipantType == 'PD_POM',
+#          TimepointNr != 1) %>%
+#   pivot_wider(id_cols = c('pseudonym','ParticipantType'),
+#               names_from = 'TimepointNr',
+#               values_from = c('Up3OnBradySum','z_MoCA__total', 'LEDD'),
+#               names_prefix = 'T') %>%
+#   mutate(Up3OnBradySum_Delta = Up3OnBradySum_T2 - Up3OnBradySum_T0,
+#          z_MoCA__total_Delta = z_MoCA__total_T2 - z_MoCA__total_T0,
+#          LEDD_Delta = LEDD_T2 - LEDD_T0)
+# # Add covariates and clinical variables
+# df_clin <- df_clin %>%
+#   left_join(., df_ba_covs[,1:8], by=c('pseudonym','ParticipantType'))
+# # Select variables
+# df_clin_s <- df_clin %>%
+#   select(pseudonym,Age,Gender,NpsEducYears,YearsSinceDiag,RespHandIsDominant,
+#          Up3OnBradySum_Delta,Up3OnBradySum_T0,
+#          z_MoCA__total_Delta,z_MoCA__total_T0,
+#          LEDD_Delta, LEDD_T0)
+# # Impute missing values
+# isna <- apply(df_clin_s, 2, is.na) %>% colSums()
+# missing_perc <- round(isna/nrow(df_clin_s), digits = 3)*100
+# print(missing_perc)
+# df_clin_s_imp <- df_clin_s %>%
+#   mice(m=round(5*missing_perc[names(missing_perc)=='Up3OnBradySum_Delta']),
+#        maxit = 10,
+#        method='pmm',
+#        seed=157,
+#        print=FALSE) %>%
+#   complete() %>%
+#   as_tibble()
+# 
+# df_putamen <- read_csv('/Volumes/project/3024006.02/Analyses/motor_task/Group/Longitudinal/APvsPP/putamen_activity.csv')
+# df <- df_putamen %>%
+#   left_join(df_clin_s_imp, by = 'pseudonym') %>%
+#   relocate(pseudonym,Age,Gender,NpsEducYears,YearsSinceDiag,
+#            RespHandIsDominant,Up3OnBradySum_Delta,Up3OnBradySum_T0,
+#            z_MoCA__total_Delta,z_MoCA__total_T0,LEDD_Delta,LEDD_T0,)
+# write_csv(df, '/Volumes/project/3024006.02/Analyses/motor_task/Group/Longitudinal/APvsPP/df_combined_clin_putamen.csv')
+df <- read_csv('/Volumes/project/3024006.02/Analyses/motor_task/Group/Longitudinal/APvsPP/df_combined_clin_putamen.csv')
 
-df_clin <- read_csv('/project/3022026.01/pep/ClinVars_10-08-2023/derivatives/merged_manipulated_2024-07-17.csv',
-                    col_select = c('pseudonym','ParticipantType','TimepointNr',
-                                   'Up3OnBradySum','z_MoCA__total', 'LEDD')) %>%
-  filter(ParticipantType == 'PD_POM',
-         TimepointNr != 1) %>%
-  pivot_wider(id_cols = c('pseudonym','ParticipantType'),
-              names_from = 'TimepointNr',
-              values_from = c('Up3OnBradySum','z_MoCA__total', 'LEDD'),
-              names_prefix = 'T') %>%
-  mutate(Up3OnBradySum_Delta = Up3OnBradySum_T2 - Up3OnBradySum_T0,
-         z_MoCA__total_Delta = z_MoCA__total_T2 - z_MoCA__total_T0,
-         LEDD_Delta = LEDD_T2 - LEDD_T0)
-# Add covariates and clinical variables
-df_clin <- df_clin %>%
-  left_join(., df_ba_covs[,1:8], by=c('pseudonym','ParticipantType'))
-# Select variables
-df_clin_s <- df_clin %>%
-  select(pseudonym,Age,Gender,NpsEducYears,YearsSinceDiag,RespHandIsDominant,
-         Up3OnBradySum_Delta,Up3OnBradySum_T0,
-         z_MoCA__total_Delta,z_MoCA__total_T0,
-         LEDD_Delta, LEDD_T0)
-# Impute missing values
-isna <- apply(df_clin_s, 2, is.na) %>% colSums()
-missing_perc <- round(isna/nrow(df_clin_s), digits = 3)*100
-print(missing_perc)
-df_clin_s_imp <- df_clin_s %>%
-  mice(m=round(5*missing_perc[names(missing_perc)=='Up3OnBradySum_Delta']),
-       maxit = 10,
-       method='pmm',
-       seed=157,
-       print=FALSE) %>%
-  complete() %>%
-  as_tibble()
-
-df_putamen <- read_csv('/project/3024006.02/Analyses/motor_task/Group/Longitudinal/APvsPP/putamen_activity.csv')
-df <- df_clin_s_imp %>%
-  left_join(df_putamen, by = 'pseudonym')
+df_l <- df %>%
+  select(1:12, ends_with('_a'), ends_with('_p'), -contains('_fu')) %>%
+  pivot_longer(cols = starts_with('con_'),
+               names_to = c('contrast','metric','putamen'),
+               names_pattern = '(.*)_(.*)_(.*)') %>%
+  rename(beta = value)
+df_l2 <- df %>%
+  select(1:12, ends_with('_r'), ends_with('_l'), -contains('_fu')) %>%
+  pivot_longer(cols = starts_with('con_'),
+               names_to = c('contrast','metric','putamen','hemisphere'),
+               names_pattern = '(.*)_(.*)_(.*)_(.*)') %>%
+  rename(beta = value)
+df_l_07 <- df_l2 %>%
+  filter(contrast=='con_0007') %>%
+  pivot_wider(names_from = metric,
+              values_from = beta,
+              names_prefix = 'beta_')
+df_l_10 <- df_l2 %>%
+  filter(contrast=='con_0010') %>%
+  pivot_wider(names_from = metric,
+              values_from = beta,
+              names_prefix = 'beta_')
 ```
 
-```{r}
-cols <- c('Up3OnBradySum_Delta','z_MoCA__total_Delta','LEDD_Delta',
-          'con_0007_delta_p','con_0007_delta_a',
-          'con_0007_delta_p_r','con_0007_delta_a_r',
-          'con_0007_delta_p_l','con_0007_delta_a_l')
-cols <- c('Up3OnBradySum_Delta','z_MoCA__total_Delta','LEDD_Delta',
-          'con_0010_delta_p','con_0010_delta_a',
-          'con_0010_delta_p_r','con_0010_delta_a_r',
-          'con_0010_delta_p_l','con_0010_delta_a_l')
-g <- df %>%
-  select(all_of(cols)) %>%
-  na.omit() %>%
-  ggpairs(lower = list(continuous = wrap('smooth', alpha = 0.5, size = 0.5)),
-          upper = list(continuous = wrap('cor', size = 3))) +
-  theme_bw() +
-  theme(legend.position = 'none')
-print(g)
+## Analyses
+
+### Change in selection-related activity ~ Motor progression
+
+```{r, echo=F}
+# cols <- c('Up3OnBradySum_Delta','z_MoCA__total_Delta','LEDD_Delta',
+#           'con_0007_delta_p','con_0007_delta_a',
+#           'con_0007_delta_p_r','con_0007_delta_a_r',
+#           'con_0007_delta_p_l','con_0007_delta_a_l')
+# g <- df %>%
+#   select(all_of(cols)) %>%
+#   na.omit() %>%
+#   ggpairs(lower = list(continuous = wrap('smooth', alpha = 0.5, size = 0.5)),
+#           upper = list(continuous = wrap('cor', size = 3))) +
+#   theme_bw() +
+#   theme(legend.position = 'none')
+# print(g)
+
+mm <- lmer(beta_delta ~ Up3OnBradySum_Delta*putamen*hemisphere + Up3OnBradySum_T0 + beta_ba + Age + Gender + NpsEducYears + YearsSinceDiag + (1+putamen+hemisphere|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_l_07)
+Anova(mm,type=3) %>% print()
+ggemmeans(mm, terms = c('Up3OnBradySum_Delta','putamen','hemisphere')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III bradykinetic-rigid (progression)', y = 'Estimated marginal means') +
+  theme_bw()
 ```
 
+### Selection-related activity ~ Motor severity
 
+```{r, echo=F}
+# cols <- c('Up3OnBradySum_T0','z_MoCA__total_T0','LEDD_T0',
+#           'con_0007_ba_p','con_0007_ba_a',
+#           'con_0007_ba_p_r','con_0007_ba_a_r',
+#           'con_0007_ba_p_l','con_0007_ba_a_l')
+# g <- df %>%
+#   select(all_of(cols)) %>%
+#   na.omit() %>%
+#   ggpairs(lower = list(continuous = wrap('smooth', alpha = 0.5, size = 0.5)),
+#           upper = list(continuous = wrap('cor', size = 3))) +
+#   theme_bw() +
+#   theme(legend.position = 'none')
+# print(g)
+
+mm <- lmer(beta_ba ~ Up3OnBradySum_T0*putamen*hemisphere + Age + Gender + NpsEducYears + YearsSinceDiag + (1+putamen+hemisphere|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_l_07)
+Anova(mm,type=3) %>% print()
+ggemmeans(mm, terms = c('Up3OnBradySum_T0','putamen','hemisphere')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III bradykinetic-rigid (baseline)', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Change in motor-related activity ~ Motor progression
+
+```{r, echo=F}
+# cols <- c('Up3OnBradySum_Delta','z_MoCA__total_Delta','LEDD_Delta',
+#           'con_0010_delta_p','con_0010_delta_a',
+#           'con_0010_delta_p_r','con_0010_delta_a_r',
+#           'con_0010_delta_p_l','con_0010_delta_a_l')
+# g <- df %>%
+#   select(all_of(cols)) %>%
+#   na.omit() %>%
+#   ggpairs(lower = list(continuous = wrap('smooth', alpha = 0.5, size = 0.5)),
+#           upper = list(continuous = wrap('cor', size = 3))) +
+#   theme_bw() +
+#   theme(legend.position = 'none')
+# print(g)
+
+mm <- lmer(beta_delta ~ Up3OnBradySum_Delta*putamen*hemisphere + Up3OnBradySum_T0 + beta_ba + Age + Gender + NpsEducYears + YearsSinceDiag + (1+putamen|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_l_10)
+Anova(mm,type=3) %>% print()
+ggemmeans(mm, terms = c('Up3OnBradySum_Delta','putamen','hemisphere')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III bradykinetic-rigid', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Motor-related activity ~ Motor severity
+
+```{r, echo=F}
+# cols <- c('Up3OnBradySum_T0','z_MoCA__total_T0','LEDD_T0',
+#           'con_0010_ba_p','con_0010_ba_a',
+#           'con_0010_ba_p_r','con_0010_ba_a_r',
+#           'con_0010_ba_p_l','con_0010_ba_a_l')
+# g <- df %>%
+#   select(all_of(cols)) %>%
+#   na.omit() %>%
+#   ggpairs(lower = list(continuous = wrap('smooth', alpha = 0.5, size = 0.5)),
+#           upper = list(continuous = wrap('cor', size = 3))) +
+#   theme_bw() +
+#   theme(legend.position = 'none')
+# print(g)
+
+mm <- lmer(beta_ba ~ Up3OnBradySum_T0*putamen*hemisphere + Age + Gender + NpsEducYears + YearsSinceDiag + (1+putamen+hemisphere|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_l_10)
+Anova(mm,type=3) %>% print()
+ggemmeans(mm, terms = c('Up3OnBradySum_T0','putamen','hemisphere')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III bradykinetic-rigid (baseline)', y = 'Estimated marginal means') +
+  theme_bw()
+```
