@@ -550,17 +550,17 @@ for(i in 1:length(con)){
     condir1=paste0('/project/3024006.02/Analyses/motor_task/Group/', con[i], '/ses-Diff/')
     condir2=paste0('/project/3024006.02/Analyses/motor_task/Group/', con[i], '/COMPLETE_ses-Visit1/')
     condir3=paste0('/project/3024006.02/Analyses/motor_task/Group/', con[i], '/COMPLETE_ses-Visit2/')
-    outputdir=paste0('/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL/data/', con[i])
+    outputdir=paste0('/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL_OFF/data/', con[i])
     exclude <- c('sub-POMU0E19B895DF700AB0')
     fsl_randomise_covars(condir1, condir2, condir3, csvfile, outputdir, exclude)
     
     # By-session analyses (full number of participants for each session)
     condir=paste0('/project/3024006.02/Analyses/motor_task/Group/', con[i], '/ses-Visit1/')
     timepointnr=0
-    outputdir=paste0('/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL/data/', con[i], '/by_session/ses-Visit1/')
+    outputdir=paste0('/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL_OFF/data/', con[i], '/by_session/ses-Visit1/')
     fsl_randomise_covars_byses(condir,csvfile,timepointnr,outputdir)
     condir=paste0('/project/3024006.02/Analyses/motor_task/Group/', con[i], '/ses-Visit2/')
     timepointnr=2
-    outputdir=paste0('/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL/data/', con[i], '/by_session/ses-Visit2/')
+    outputdir=paste0('/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL_OFF/data/', con[i], '/by_session/ses-Visit2/')
     fsl_randomise_covars_byses(condir,csvfile,timepointnr,outputdir)
 }
