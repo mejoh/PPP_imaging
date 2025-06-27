@@ -15,9 +15,9 @@
 # Set paths and parameters
 groupdir=/project/3024006.02/Analyses/motor_task/Group
 cd ${groupdir}
-datadir=${groupdir}/Longitudinal/FSL/data
-statsdir=${groupdir}/Longitudinal/FSL/stats
-designsdir=${groupdir}/Longitudinal/FSL/designs
+datadir=${groupdir}/Longitudinal/FSL_OFF/data
+statsdir=${groupdir}/Longitudinal/FSL_OFF/stats
+designsdir=${groupdir}/Longitudinal/FSL_OFF/designs
 masksdir=${groupdir}/Longitudinal/Masks
 MASK_ROI=${masksdir}/bi_full_clincorr_bg_mask_cropped.nii
 MASK_WHOLE=${masksdir}/wd/tpl-MNI152NLin6Asym_desc-brain_mask.nii

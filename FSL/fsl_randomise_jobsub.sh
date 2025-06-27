@@ -6,11 +6,19 @@
 
 statsdir="/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL/stats"
 logsdir="/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL/logs"
-#ses=("delta")
-ses=("ses-Visit1" "ses-Visit2")
+# Delta
+ses=("delta") # ba fu
+# Session
+#ses=("ses-Visit1" "ses-Visit2")
 for s in ${ses[@]}; do
+	# T-test
+	jobscripts=( $(ls ${statsdir}/*/cmd_rand_delta_unpaired_ttest_unmatched*.txt) )
+	# Delta
 	#jobscripts=( $(ls ${statsdir}/*/cmd_rand_delta_clincorr*.txt) )
-	jobscripts=( $(ls ${statsdir}/*/by_session/${s}/cmd_rand_*.txt) )
+	# Session
+	#jobscripts=( $(ls ${statsdir}/*/by_session/${s}/cmd_rand_*.txt) )
+	# Post hoc
+	#jobscripts=( $(ls ${statsdir}/*/by_session/${s}/cmd_rand_*.txt) )
 	for(( i=0; i<${#jobscripts[@]}; i++ )); do
 
 		JNAME=`basename -- "${jobscripts[i]}" .txt`
