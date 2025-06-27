@@ -2,8 +2,8 @@
 
 # ~/scripts/PPP_imaging/FSL/fsl_extract_stats_loop.sh
 
-ANALYSISDIR="/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL"
-LOGDIR="/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL/logs"
+ANALYSISDIR="/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL_OFF"
+LOGDIR="/project/3024006.02/Analyses/motor_task/Group/Longitudinal/FSL_OFF/logs"
 CONS=(con_0007 con_0010)
 SESSION=(delta)
 CONDIR_END=""
@@ -11,7 +11,7 @@ CONDIR_END=""
 # CONDIR_END="/by_session/ses-Visit2"
 
 # Brain - Clinical correlations
-ANALYSIS=(clincorr_all_vxlEV)
+ANALYSIS=(clincorr_all_vxlEV clincorr_all_vxlEV_AddCov2)
 for C in ${CONS[@]}; do
 	DATADIR=${ANALYSISDIR}/data/${C}
 	CONDIR=${ANALYSISDIR}/stats/${C}${CONDIR_END}
@@ -116,3 +116,4 @@ for C in ${CONS[@]}; do
 		# # # done
 	# # # done
 # # # done
+
