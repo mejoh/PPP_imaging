@@ -24,7 +24,7 @@ knitr::opts_chunk$set(echo = TRUE)
 into anterior, posterior, left, and right. In our case, due to the horizontal
 flipping of contrast images, left is most affected whereas right is least
 affected.
-whereas
+- Taking betas from the hemisphere contralateral to the most affected side (i.e., left), test whether the effect of action selection demand differs between anterior and posterior putamen, and whether this difference is influenced by PD (GROUP x CHOICE x SUBREGION)
 - Test whether correlations with motor progression differ for anterior and posterior beta estimates.
 - Test for PROGRESSION x ANTERIOR/POSTERIOR x LEFT/RIGHT interactions on 2-year change in beta estimates.
 - Also for SEVERITY x ANTERIOR/POSTERIOR x LEFT/RIGHT interactions on beta estimates.
@@ -38,12 +38,202 @@ library(mice)
 library(cocor)
 library(car)
 library(lme4)
+library(lmerTest)
+library(emmeans)
 library(ggeffects)
+library(kableExtra)
+
+emm_options(lmerTest.df = 'satterthwaite')
+emm_options(lmerTest.limit = 50000)
+emm_options(disable.pbkrtest=TRUE)
 ```
 
-## Load data
+## Load data (AFNI)
 
 ```{r, echo=F,warning=F,message=F}
+
+# # Time-invariant covariates
+# df_covs_tiv <- read_csv('/Volumes/project/3022026.01/pep/ClinVars_10-08-2023/derivatives/merged_manipulated_2024-07-17.csv',
+#                        col_select = all_of(c('pseudonym','ParticipantType','Subtype_DiagEx3_DisDurSplit','TimepointNr','Age',
+#                                              'Gender','NpsEducYears','YearsSinceDiag','PrefHand'))) %>%
+#   filter(ParticipantType %in% c('PD_POM','HC_PIT'),
+#          TimepointNr == 0) %>%
+#   mutate(Gender=if_else(Gender=='Female',0,1),
+#          Subtype_DiagEx3_DisDurSplit = if_else(ParticipantType=='HC_PIT','0_Healthy',Subtype_DiagEx3_DisDurSplit))
+# source("/Users/marjoh/Documents/work/code/PPP_imaging/R/functions/retrieve_resphand.R")
+# resphand <- retrieve_resphand() %>% rename(ParticipantType=Group) %>% filter(str_detect(Timepoint,'Visit1'))
+# df_covs_tiv <- df_covs_tiv %>%
+#   left_join(., resphand, by = c('pseudonym','ParticipantType')) %>%
+#   mutate(RespHandIsDominant = if_else(RespondingHand == PrefHand | PrefHand == 'NoPref',1,0)) %>%
+#   select(-c(Timepoint,TimepointNr))
+# 
+# # Time-variant covariates
+# df_covs_tv <- read_csv('/Volumes/project/3022026.01/pep/ClinVars_10-08-2023/derivatives/merged_manipulated_2024-07-17.csv',
+#                        col_select = all_of(c('pseudonym','ParticipantType','TimepointNr',
+#                                              'Up3OfBradySum','Up3OnBradySum','Up3OfTotal','Up3OnTotal',
+#                                              'Up3OfBradySumR','Up3OfBradySumL',
+#                                              'z_MoCA__total','LEDD',
+#                                              'Up3OfPegRLBSum','Up3OfPegPrefHand','Up3OfPegNonPHand','Up3OfPegBoth',
+#                                              'Up3OfUpGoAn1','Up3OfUpGoAn2','Up3OfUpGoWr1','Up3OfUpGoWr2',
+#                                              'Up3OfUpGoAnMean','Up3OfUpGoAnLowest',
+#                                              'Up3OnPegRLBSum','Up3OnPegPrefHand','Up3OnPegNonPHand','Up3OnPegBoth',
+#                                              'Up3OnUpGoAn1','Up3OnUpGoAn2','Up3OnUpGoWr1','Up3OnUpGoWr2',
+#                                              'Up3OnUpGoAnMean','Up3OnUpGoAnLowest',
+#                                              'AsymmetryIndexRiLe.WeightedBradyRig2','PrefHand'))) %>%
+#   filter(ParticipantType %in% c('PD_POM','HC_PIT'),
+#          TimepointNr %in% c(0,2)) %>%
+#   mutate(MAS = case_when(
+#     AsymmetryIndexRiLe.WeightedBradyRig2 > 0 ~ 'Right',
+#     AsymmetryIndexRiLe.WeightedBradyRig2 < 0 ~ 'Left',
+#     AsymmetryIndexRiLe.WeightedBradyRig2 == 0 ~ 'NoPref'
+#   ),
+#   Up3OfUpGoWr1 = as.double(Up3OfUpGoWr1),
+#   Up3OfUpGoMean = (Up3OfUpGoAn1+Up3OfUpGoAn2+Up3OfUpGoWr1+Up3OfUpGoWr2)/4,
+#   Up3OnUpGoMean = (Up3OnUpGoAn1+Up3OnUpGoAn2+Up3OnUpGoWr1+Up3OnUpGoWr2)/4) %>%
+#   select(all_of(c('pseudonym','ParticipantType','TimepointNr',
+#                   'Up3OfBradySum','Up3OnBradySum','Up3OfTotal','Up3OnTotal',
+#                   'Up3OfBradySumR','Up3OfBradySumL',
+#                   'z_MoCA__total','LEDD',
+#                   'Up3OfPegRLBSum','Up3OfPegPrefHand','Up3OfPegNonPHand','Up3OfPegBoth',
+#                   'Up3OnPegRLBSum','Up3OnPegPrefHand','Up3OnPegNonPHand','Up3OnPegBoth',
+#                   'Up3OfUpGoMean','Up3OnUpGoMean',
+#                   'MAS','PrefHand')))
+# df_covs_tv <- df_covs_tv %>%
+#   mutate(
+#     Up3OfBradyMAS = case_when(
+#       MAS == 'Right' ~ Up3OfBradySumR,
+#       MAS == 'Left' ~ Up3OfBradySumL,
+#       .default = NA
+#     ),
+#     Up3OfBradyLAS = case_when(
+#       MAS == 'Right' ~ Up3OfBradySumL,
+#       MAS == 'Left' ~ Up3OfBradySumR,
+#       .default = NA
+#     ),
+#     Up3OfPegMAS = case_when(
+#       PrefHand == 'Right' & MAS == 'Right' ~ Up3OfPegPrefHand,
+#       PrefHand == 'Left' & MAS == 'Left' ~ Up3OfPegPrefHand,
+#       PrefHand == 'Right' & MAS == 'Left' ~ Up3OfPegNonPHand,
+#       PrefHand == 'Left' & MAS == 'Right' ~ Up3OfPegNonPHand,
+#       .default = NA
+#     ),
+#     Up3OfPegLAS = case_when(
+#       PrefHand == 'Right' & MAS == 'Left' ~ Up3OfPegPrefHand,
+#       PrefHand == 'Left' & MAS == 'Right' ~ Up3OfPegPrefHand,
+#       PrefHand == 'Right' & MAS == 'Right' ~ Up3OfPegNonPHand,
+#       PrefHand == 'Left' & MAS == 'Left' ~ Up3OfPegNonPHand,
+#       .default = NA
+#     ),
+#     Up3OnPegMAS = case_when(
+#       PrefHand == 'Right' & MAS == 'Right' ~ Up3OnPegPrefHand,
+#       PrefHand == 'Left' & MAS == 'Left' ~ Up3OnPegPrefHand,
+#       PrefHand == 'Right' & MAS == 'Left' ~ Up3OnPegNonPHand,
+#       PrefHand == 'Left' & MAS == 'Right' ~ Up3OnPegNonPHand,
+#       .default = NA
+#     ),
+#     Up3OnPegLAS = case_when(
+#       PrefHand == 'Right' & MAS == 'Left' ~ Up3OnPegPrefHand,
+#       PrefHand == 'Left' & MAS == 'Right' ~ Up3OnPegPrefHand,
+#       PrefHand == 'Right' & MAS == 'Right' ~ Up3OnPegNonPHand,
+#       PrefHand == 'Left' & MAS == 'Left' ~ Up3OnPegNonPHand,
+#       .default = NA
+#     )
+#   ) %>%
+#   select(-c('MAS','PrefHand'))
+# 
+# # Combined time-invariant and time-variant covariates
+# df_covs <- full_join(df_covs_tiv,df_covs_tv,
+#                      by=c('pseudonym','ParticipantType')) %>%
+#   relocate(TimepointNr, .after = Subtype_DiagEx3_DisDurSplit) %>%
+#   mutate(TimepointNr = case_when(TimepointNr==0 ~ 'T0',
+#                                  TimepointNr==2 ~ 'T1'))
+# 
+# df_putamen <- read_csv('/Volumes/project/3024006.02/Analyses/motor_task/Group/Longitudinal/APvsPP/putamen_activity_full_sample.csv')
+# df <- df_putamen %>%
+#   left_join(df_covs, by = c('pseudonym','ParticipantType','TimepointNr')) %>%
+#   relocate(pseudonym,ParticipantType,Subtype_DiagEx3_DisDurSplit,TimepointNr,trial_type,Age,Gender,NpsEducYears,YearsSinceDiag,RespHandIsDominant)
+# write_csv(df, '/Volumes/project/3024006.02/Analyses/motor_task/Group/Longitudinal/APvsPP/df_combined_clin_putamen_full_sample.csv')
+df_afni <- read_csv('/Volumes/project/3024006.02/Analyses/motor_task/Group/Longitudinal/APvsPP/df_combined_clin_putamen_full_sample.csv')
+
+df_afni_l <- df_afni %>%
+  pivot_longer(cols = starts_with('beta_'),
+               names_to = c('placeholder','putamen','hemisphere'),
+               names_pattern = '(.*)_(.*)_(.*)') %>%
+  select(-placeholder) %>%
+  rename(beta = value,
+         subtype = Subtype_DiagEx3_DisDurSplit) %>%
+  mutate(TimepointNr = factor(TimepointNr),
+         trial_type = if_else(trial_type=='1c','single','multiple'),
+         trial_type = factor(trial_type),
+         ParticipantType = factor(ParticipantType, levels = c('HC_PIT','PD_POM'), labels = c('HC','PD')),
+         subtype = factor(subtype),
+         Gender = factor(Gender, levels = c(0,1), labels = c('F','M')),
+         RespHandIsDominant = factor(RespHandIsDominant),
+         putamen = factor(putamen, levels = c('p','a'), labels = c('p','a')),
+         hemisphere = factor(hemisphere, levels = c('r','l'), labels = c('least','most')))
+
+df_afni_l2 <- df_afni_l %>%
+  pivot_wider(id_cols = c('pseudonym','ParticipantType','subtype','TimepointNr','Age','Gender','NpsEducYears',
+                          'YearsSinceDiag','RespHandIsDominant','putamen','hemisphere',
+                          'Up3OfBradySum','Up3OnBradySum','Up3OfTotal','Up3OnTotal',
+                          'Up3OfBradyMAS','Up3OfBradyLAS',
+                          'z_MoCA__total','LEDD',
+                          'Up3OfPegMAS','Up3OfPegLAS','Up3OnPegMAS','Up3OnPegLAS',
+                          'Up3OfPegRLBSum','Up3OfPegPrefHand','Up3OfPegNonPHand','Up3OfPegBoth',
+                          'Up3OnPegRLBSum','Up3OnPegPrefHand','Up3OnPegNonPHand','Up3OnPegBoth',
+                          'Up3OfUpGoMean','Up3OnUpGoMean'),
+              names_from = 'trial_type',
+              values_from = 'beta',
+              names_prefix = 'beta_') %>%
+  mutate(beta_selection = beta_multiple - beta_single,
+         beta_motor = (beta_multiple+beta_single)/2)
+
+df_afni_l3 <- df_afni_l2 %>%
+  filter(ParticipantType == 'PD') %>%
+  pivot_wider(id_cols = c('pseudonym','ParticipantType','subtype','Age','Gender','NpsEducYears',
+                          'YearsSinceDiag','RespHandIsDominant','hemisphere','putamen'),
+              names_from = c('TimepointNr'),
+              values_from = c('beta_single','beta_multiple','beta_selection','beta_motor',
+                              'Up3OfBradySum','Up3OnBradySum','Up3OfTotal','Up3OnTotal',
+                              'Up3OfBradyMAS','Up3OfBradyLAS',
+                              'z_MoCA__total','LEDD',
+                              'Up3OfPegMAS','Up3OfPegLAS','Up3OnPegMAS','Up3OnPegLAS',
+                              'Up3OfPegRLBSum','Up3OfPegPrefHand','Up3OfPegNonPHand','Up3OfPegBoth',
+                              'Up3OnPegRLBSum','Up3OnPegPrefHand','Up3OnPegNonPHand','Up3OnPegBoth',
+                              'Up3OfUpGoMean','Up3OnUpGoMean')) %>%
+  mutate(beta_selection_delta = beta_selection_T1 - beta_selection_T0,
+         beta_motor_delta = beta_motor_T1 - beta_motor_T0,
+         beta_single_delta = beta_single_T1 - beta_single_T0,
+         beta_multiple_delta = beta_multiple_T1 - beta_multiple_T0,
+         Up3OfBradySum_delta = Up3OfBradySum_T1 - Up3OfBradySum_T0,
+         Up3OnBradySum_delta = Up3OnBradySum_T1 - Up3OnBradySum_T0,
+         Up3OfTotal_delta = Up3OfTotal_T1 - Up3OfTotal_T0,
+         Up3OnTotal_delta = Up3OnTotal_T1 - Up3OnTotal_T0,
+         Up3OfBradyMAS_delta = Up3OfBradyMAS_T1 - Up3OfBradyMAS_T0,
+         Up3OfBradyLAS_delta = Up3OfBradyLAS_T1 - Up3OfBradyLAS_T0,
+         z_MoCA__total_delta = z_MoCA__total_T1 - z_MoCA__total_T0,
+         LEDD_delta = LEDD_T1 - LEDD_T0,
+         Up3OfPegMAS_delta = Up3OfPegMAS_T1 - Up3OfPegMAS_T0,
+         Up3OfPegLAS_delta = Up3OfPegLAS_T1 - Up3OfPegLAS_T0,
+         Up3OnPegMAS_delta = Up3OnPegMAS_T1 - Up3OnPegMAS_T0,
+         Up3OnPegLAS_delta = Up3OnPegLAS_T1 - Up3OnPegLAS_T0,
+         Up3OfPegRLBSum_delta = Up3OfPegRLBSum_T1 - Up3OfPegRLBSum_T0,
+         Up3OnPegRLBSum_delta = Up3OnPegRLBSum_T1 - Up3OnPegRLBSum_T0,
+         Up3OfUpGoMean_delta = Up3OfUpGoMean_T1 - Up3OfUpGoMean_T0,
+         Up3OnUpGoMean_delta = Up3OnUpGoMean_T1 - Up3OnUpGoMean_T0)
+
+df_afni_l4 <- df_afni_l3 %>%
+  filter(hemisphere == 'most')
+
+df_afni_l5 <- df_afni_l3 %>%
+  filter(hemisphere == 'least')
+```
+
+## Load data (FSL)
+
+```{r, echo=F,warning=F,message=F, eval=F}
+
+# DATA FROM FSL CORRELATION ANALYSES
 # df_ba_covs <- read_csv('/Volumes/project/3022026.01/pep/ClinVars_10-08-2023/derivatives/merged_manipulated_2024-07-17.csv',
 #                        col_select = all_of(c('pseudonym','ParticipantType','TimepointNr','Age',
 #                                              'Gender','NpsEducYears','YearsSinceDiag','PrefHand'))) %>%
@@ -99,37 +289,498 @@ library(ggeffects)
 #            RespHandIsDominant,Up3OnBradySum_Delta,Up3OnBradySum_T0,
 #            z_MoCA__total_Delta,z_MoCA__total_T0,LEDD_Delta,LEDD_T0,)
 # write_csv(df, '/Volumes/project/3024006.02/Analyses/motor_task/Group/Longitudinal/APvsPP/df_combined_clin_putamen.csv')
-df <- read_csv('/Volumes/project/3024006.02/Analyses/motor_task/Group/Longitudinal/APvsPP/df_combined_clin_putamen.csv')
+df_fsl <- read_csv('/Volumes/project/3024006.02/Analyses/motor_task/Group/Longitudinal/APvsPP/df_combined_clin_putamen.csv')
 
-df_l <- df %>%
+# Bilateral
+df_fsl_l <- df_fsl %>%
   select(1:12, ends_with('_a'), ends_with('_p'), -contains('_fu')) %>%
   pivot_longer(cols = starts_with('con_'),
                names_to = c('contrast','metric','putamen'),
                names_pattern = '(.*)_(.*)_(.*)') %>%
   rename(beta = value)
-df_l2 <- df %>%
+# Hemisphere separated (preferred)
+df_fsl_l2 <- df_fsl %>%
   select(1:12, ends_with('_r'), ends_with('_l'), -contains('_fu')) %>%
   pivot_longer(cols = starts_with('con_'),
                names_to = c('contrast','metric','putamen','hemisphere'),
                names_pattern = '(.*)_(.*)_(.*)_(.*)') %>%
   rename(beta = value)
-df_l_07 <- df_l2 %>%
+df_fsl_l_07 <- df_fsl_l2 %>%
   filter(contrast=='con_0007') %>%
   pivot_wider(names_from = metric,
               values_from = beta,
               names_prefix = 'beta_')
-df_l_10 <- df_l2 %>%
+df_fsl_l_10 <- df_fsl_l2 %>%
   filter(contrast=='con_0010') %>%
   pivot_wider(names_from = metric,
               values_from = beta,
               names_prefix = 'beta_')
 ```
 
-## Analyses
+## Group comparisons (AFNI data)
+
+### Group comparison of task-related activity
+
+```{r, echo=F}
+tmp <- df_afni_l %>%
+  filter(TimepointNr=='T0',
+         hemisphere=='most')
+
+tmp %>%
+  ggplot(aes(x=trial_type,y=beta,fill=putamen)) + 
+  geom_boxplot() +
+  facet_wrap(~ParticipantType) +
+  theme_bw()
+
+mm <- lmer(beta ~ ParticipantType*trial_type*putamen + Age + Gender + NpsEducYears + RespHandIsDominant + (1+putamen|pseudonym), 
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = tmp)
+
+Anova(mm, type=3) %>% print()
+
+# Emmeans plot #1
+ggemmeans(mm, terms = c('trial_type','putamen','ParticipantType')) %>%
+  plot() +
+  labs(x = 'Choice', y = 'Estimated marginal means (beta)') +
+  theme_bw()
+# Emmeans plot #2
+emmip(mm, putamen ~ trial_type | ParticipantType, CIs = TRUE, type='response') + 
+  theme_bw() + 
+  labs(x = 'Choice', y = 'Estimated marginal means (beta)')
+
+# Post hoc
+em <- emmeans(mm, ~putamen*trial_type*ParticipantType,type='response')
+# Level 1
+contrast(em, interaction = c('revpairwise','pairwise','revpairwise'),type='response') %>% kable(., 'pipe', digits=3) %>% print()
+# Level 2
+contrast(em, interaction = c('identity','pairwise','revpairwise'),type='response') %>% kable(., 'pipe', digits=3) %>% print()
+contrast(em, interaction = c('revpairwise','identity','revpairwise'),type='response') %>% kable(., 'pipe', digits=3) %>% print()
+contrast(em, interaction = c('revpairwise','pairwise','identity'),type='response') %>% kable(., 'pipe', digits=3) %>% print()
+# Level 3
+contrast(em, interaction = c('revpairwise','identity','identity'),type='response') %>% kable(., 'pipe', digits=3) %>% print()
+contrast(em, interaction = c('identity','pairwise','identity'),type='response') %>% kable(., 'pipe', digits=3) %>% print()
+contrast(em, interaction = c('identity','identity','revpairwise'),type='response') %>% kable(., 'pipe', digits=3) %>% print()
+# Level 4
+emmeans(mm, ~putamen*trial_type,type='response') %>% contrast(interaction=c('revpairwise','pairwise')) %>% kable(., 'pipe', digits=3) %>% print()
+emmeans(mm, ~putamen*ParticipantType,type='response') %>% contrast(interaction=c('revpairwise','revpairwise')) %>% kable(., 'pipe', digits=3) %>% print()
+emmeans(mm, ~trial_type*ParticipantType,type='response') %>% contrast(interaction=c('pairwise','revpairwise')) %>% kable(., 'pipe', digits=3) %>% print()
+# Level 5
+emmeans(mm, ~putamen,type='response') %>% contrast(interaction=c('revpairwise')) %>% kable(., 'pipe', digits=3) %>% print()
+em <- emmeans(mm, ~trial_type,type='response') %>% contrast(interaction=c('pairwise')) %>% kable(., 'pipe', digits=3) %>% print()
+em <- emmeans(mm, ~ParticipantType,type='response') %>% contrast(interaction=c('revpairwise')) %>% kable(., 'pipe', digits=3) %>% print()
+```
+
+### Control analysis with subtypes
+
+```{r, echo=F}
+tmp <- df_afni_l %>%
+  filter(TimepointNr=='T0',
+         hemisphere=='most',
+         subtype %in% c('0_Healthy','1_Mild-Motor','2_Intermediate','3_Diffuse-Malignant'))
+
+mm <- lmer(beta ~ subtype*trial_type*putamen + Age + Gender + NpsEducYears + RespHandIsDominant + (1+putamen|pseudonym), 
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = tmp)
+
+emmip(mm, putamen ~ trial_type | subtype, CIs = TRUE, type='response') + 
+  theme_bw() + 
+  labs(x = 'Choice', y = 'Estimated marginal means (beta)')
+
+Anova(mm, type=3) %>% print()
+
+emmeans(mm, ~putamen*trial_type*subtype,type='response') %>% contrast(interaction=c('revpairwise','pairwise','revpairwise')) %>% kable(., 'pipe', digits=3) %>% print()
+emmeans(mm, ~putamen*trial_type*subtype,type='response') %>% contrast(interaction=c('revpairwise','pairwise','identity')) %>% kable(., 'pipe', digits=3) %>% print()
+```
+
+### Control analysis with group, inferring specifically on selection-related effects
+
+```{r, echo=F}
+tmp <- df_afni_l2 %>%
+  filter(TimepointNr=='T0',
+         hemisphere=='most')
+
+mm <- lmer(beta_multiple ~ ParticipantType*putamen + Age + Gender + NpsEducYears + RespHandIsDominant + beta_single + (1|pseudonym), 
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = tmp)
+
+emmip(mm, putamen ~ ParticipantType, CIs = TRUE, type='response', linearg = list(linetype='dotted')) + 
+  theme_bw() + 
+  labs(x = 'Subtype', y = 'Estimated marginal means (beta)')
+
+Anova(mm, type=3) %>% print()
+
+emmeans(mm, ~putamen*ParticipantType,type='response') %>% contrast(interaction=c('revpairwise','revpairwise')) %>% kable(., 'pipe', digits=3) %>% print()
+emmeans(mm, ~putamen*ParticipantType,type='response') %>% contrast(interaction=c('identity','revpairwise')) %>% kable(., 'pipe', digits=3) %>% print()
+emmeans(mm, ~putamen*ParticipantType,type='response') %>% contrast(interaction=c('revpairwise','identity')) %>% kable(., 'pipe', digits=3) %>% print()
+```
+
+### Control analysis with subtypes, inferring specifically on selection-related effects
+
+```{r, echo=F}
+tmp <- df_afni_l2 %>%
+  filter(TimepointNr=='T0',
+         hemisphere=='most',
+         subtype %in% c('0_Healthy','1_Mild-Motor','2_Intermediate','3_Diffuse-Malignant'))
+
+mm <- lmer(beta_multiple ~ subtype*putamen + Age + Gender + NpsEducYears + RespHandIsDominant + beta_single + (1|pseudonym), 
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = tmp)
+
+emmip(mm, putamen ~ subtype, CIs = TRUE, type='response', linearg = list(linetype='dotted')) + 
+  theme_bw() + 
+  labs(x = 'Subtype', y = 'Estimated marginal means (beta)')
+
+Anova(mm, type=3) %>% print()
+
+emmeans(mm, ~putamen*subtype,type='response') %>% contrast(interaction=c('revpairwise','revpairwise')) %>% kable(., 'pipe', digits=3) %>% print()
+emmeans(mm, ~putamen*subtype,type='response') %>% contrast(interaction=c('identity','revpairwise')) %>% kable(., 'pipe', digits=3) %>% print()
+emmeans(mm, ~putamen*subtype,type='response') %>% contrast(interaction=c('revpairwise','identity')) %>% kable(., 'pipe', digits=3) %>% print()
+```
+
+## Correlation analyses (AFNI data)
+
+### Change in selection-related activity ~ Total progression
+
+```{r, echo=F}
+mm <- lmer(beta_selection_delta ~ Up3OfTotal_delta*putamen + Up3OfTotal_T0 + beta_selection_T0 + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfTotal_delta','putamen')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III total', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Change in selection-related activity ~ Bradykinesia progression
+
+```{r, echo=F}
+mm <- lmer(beta_selection_delta ~ Up3OfBradySum_delta*putamen + z_MoCA__total_delta*putamen + Up3OfBradySum_T0 + z_MoCA__total_T0 + beta_selection_T0 + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfBradySum_delta','putamen')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III brady', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Change in selection-related activity ~ MAS bradykinesia progression
+
+```{r, echo=F}
+mm <- lmer(beta_selection_delta ~ Up3OfBradyMAS_delta*putamen + z_MoCA__total_delta*putamen + Up3OfBradyMAS_T0 + z_MoCA__total_T0 + beta_selection_T0 + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfBradyMAS_delta','putamen')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III brady (MAS)', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Change in selection-related activity ~ Pegboard progression
+
+```{r, echo=F}
+mm <- lmer(beta_selection_delta ~ Up3OfPegRLBSum_delta*putamen + z_MoCA__total_delta*putamen + Up3OfPegRLBSum_T0 + z_MoCA__total_T0 + beta_selection_T0 + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfPegRLBSum_delta','putamen')) %>%
+  plot() +
+  labs(x = 'Pegboard (RLB)', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Change in selection-related activity ~ MAS pegboard progression
+
+```{r, echo=F}
+mm <- lmer(beta_selection_delta ~ Up3OfPegMAS_delta*putamen + z_MoCA__total_delta*putamen + Up3OfPegMAS_T0 + z_MoCA__total_T0 + beta_selection_T0 + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfPegMAS_delta','putamen')) %>%
+  plot() +
+  labs(x = 'Pegboard (MAS)', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Change in selection-related activity ~ TUG progression
+
+```{r, echo=F}
+mm <- lmer(beta_selection_delta ~ Up3OfUpGoMean_delta*putamen + z_MoCA__total_delta*putamen + Up3OfUpGoMean_T0 + z_MoCA__total_T0 + beta_selection_T0 + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfUpGoMean_delta','putamen')) %>%
+  plot() +
+  labs(x = 'TUG', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Selection-related activity ~ Total severity
+
+```{r, echo=F}
+mm <- lmer(beta_selection_T0 ~ Up3OfTotal_T0*putamen + z_MoCA__total_T0*putamen + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfTotal_T0','putamen')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III total', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Selection-related activity ~ Bradykinesia severity
+
+```{r, echo=F}
+mm <- lmer(beta_selection_T0 ~ Up3OfBradySum_T0*putamen + z_MoCA__total_T0*putamen + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfBradySum_T0','putamen')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III brady', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Selection-related activity ~ MAS bradykinesia severity
+
+```{r, echo=F}
+mm <- lmer(beta_selection_T0 ~ Up3OfBradyMAS_T0*putamen + z_MoCA__total_T0*putamen + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfBradyMAS_T0','putamen')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III brady (MAS)', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Selection-related activity ~ Pegboard severity
+
+```{r, echo=F}
+mm <- lmer(beta_selection_T0 ~ Up3OfPegRLBSum_T0*putamen + z_MoCA__total_T0*putamen + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfPegRLBSum_T0','putamen')) %>%
+  plot() +
+  labs(x = 'Pegboard (RLB)', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Selection-related activity ~ MAS pegboard severity
+
+```{r, echo=F}
+mm <- lmer(beta_selection_T0 ~ Up3OfPegMAS_T0*putamen + z_MoCA__total_T0*putamen + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfPegMAS_T0','putamen')) %>%
+  plot() +
+  labs(x = 'Pegboard (MAS)', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+
+### Selection-related activity ~ TUG severity
+
+```{r, echo=F}
+mm <- lmer(beta_selection_T0 ~ Up3OfUpGoMean_T0*putamen + z_MoCA__total_T0*putamen + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfUpGoMean_T0','putamen')) %>%
+  plot() +
+  labs(x = 'TUG', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Change in motor-related activity ~ Total progression
+
+```{r, echo=F}
+mm <- lmer(beta_motor_delta ~ Up3OfTotal_delta*putamen + z_MoCA__total_delta*putamen + Up3OfTotal_T0 + z_MoCA__total_T0 + beta_motor_T0 + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfTotal_delta','putamen')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III total', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Change in motor-related activity ~ Bradykinesia progression
+
+```{r, echo=F}
+mm <- lmer(beta_motor_delta ~ Up3OfBradySum_delta*putamen + z_MoCA__total_delta*putamen + Up3OfBradySum_T0 + z_MoCA__total_T0 + beta_motor_T0 + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfBradySum_delta','putamen')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III brady', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Change in motor-related activity ~ MAS bradykinesia progression
+
+```{r, echo=F}
+mm <- lmer(beta_motor_delta ~ Up3OfBradyMAS_delta*putamen + z_MoCA__total_delta*putamen + Up3OfBradyMAS_T0 + z_MoCA__total_T0 + beta_motor_T0 + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfBradyMAS_delta','putamen')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III brady (MAS)', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Change in motor-related activity ~ Pegboard progression
+
+```{r, echo=F}
+mm <- lmer(beta_motor_delta ~ Up3OfPegRLBSum_delta*putamen + z_MoCA__total_delta*putamen + Up3OfPegRLBSum_T0 + z_MoCA__total_T0 + beta_motor_T0 + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfPegRLBSum_delta','putamen')) %>%
+  plot() +
+  labs(x = 'Pegboard (RLB)', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Change in motor-related activity ~ MAS pegboard progression
+
+```{r, echo=F}
+mm <- lmer(beta_motor_delta ~ Up3OfPegMAS_delta*putamen + z_MoCA__total_delta*putamen + Up3OfPegMAS_T0 + z_MoCA__total_T0 + beta_motor_T0 + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfPegMAS_delta','putamen')) %>%
+  plot() +
+  labs(x = 'Pegboard (MAS)', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Change in motor-related activity ~ TUG progression
+
+```{r, echo=F}
+mm <- lmer(beta_motor_delta ~ Up3OfUpGoMean_delta*putamen + z_MoCA__total_delta*putamen + Up3OfUpGoMean_T0 + z_MoCA__total_T0 + beta_motor_T0 + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfUpGoMean_delta','putamen')) %>%
+  plot() +
+  labs(x = 'TUG', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Motor-related activity ~ Total severity
+
+```{r, echo=F}
+mm <- lmer(beta_motor_T0 ~ Up3OfTotal_T0*putamen + z_MoCA__total_T0*putamen + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfTotal_T0','putamen')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III total', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Motor-related activity ~ Bradykinesia severity
+
+```{r, echo=F}
+mm <- lmer(beta_motor_T0 ~ Up3OfBradySum_T0*putamen + z_MoCA__total_T0*putamen + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfBradySum_T0','putamen')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III brady', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Motor-related activity ~ MAS bradykinesia severity
+
+```{r, echo=F}
+mm <- lmer(beta_motor_T0 ~ Up3OfBradyMAS_T0*putamen + z_MoCA__total_T0*putamen + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfBradyMAS_T0','putamen')) %>%
+  plot() +
+  labs(x = 'MDS-UPDRS III brady (MAS)', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Motor-related activity ~ Pegboard severity
+
+```{r, echo=F}
+mm <- lmer(beta_motor_T0 ~ Up3OfPegRLBSum_T0*putamen + z_MoCA__total_T0*putamen + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfPegRLBSum_T0','putamen')) %>%
+  plot() +
+  labs(x = 'Pegboard (RLB)', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Motor-related activity ~ MAS pegboard severity
+
+```{r, echo=F}
+mm <- lmer(beta_motor_T0 ~ Up3OfPegMAS_T0*putamen + z_MoCA__total_T0*putamen + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfPegMAS_T0','putamen')) %>%
+  plot() +
+  labs(x = 'Pegboard (MAS)', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+### Motor-related activity ~ TUG severity
+
+```{r, echo=F}
+mm <- lmer(beta_motor_T0 ~ Up3OfUpGoMean_T0*putamen + z_MoCA__total_T0*putamen + Age + Gender + NpsEducYears + YearsSinceDiag + RespHandIsDominant + (1|pseudonym),
+           control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
+           data = df_afni_l4)
+Anova(mm,type=3) %>% print()
+
+ggemmeans(mm, terms = c('Up3OfUpGoMean_T0','putamen')) %>%
+  plot() +
+  labs(x = 'TUG', y = 'Estimated marginal means') +
+  theme_bw()
+```
+
+## DEPRECATED! Correlation analyses (FSL data)
 
 ### Change in selection-related activity ~ Motor progression
 
-```{r, echo=F}
+```{r, echo=F, eval=F}
 # cols <- c('Up3OnBradySum_Delta','z_MoCA__total_Delta','LEDD_Delta',
 #           'con_0007_delta_p','con_0007_delta_a',
 #           'con_0007_delta_p_r','con_0007_delta_a_r',
@@ -143,19 +794,26 @@ df_l_10 <- df_l2 %>%
 #   theme(legend.position = 'none')
 # print(g)
 
-mm <- lmer(beta_delta ~ Up3OnBradySum_Delta*putamen*hemisphere + Up3OnBradySum_T0 + beta_ba + Age + Gender + NpsEducYears + YearsSinceDiag + (1+putamen+hemisphere|pseudonym),
+tmp <- df_fsl_l_07 %>%
+  filter(hemisphere=='l')
+
+mm <- lmer(beta_delta ~ Up3OnBradySum_Delta*putamen + z_MoCA__total_Delta*putamen + Up3OnBradySum_T0 + z_MoCA__total_T0 + beta_ba + Age + Gender + NpsEducYears + YearsSinceDiag + (1+putamen|pseudonym),
            control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
-           data = df_l_07)
+           data = tmp)
 Anova(mm,type=3) %>% print()
-ggemmeans(mm, terms = c('Up3OnBradySum_Delta','putamen','hemisphere')) %>%
+ggemmeans(mm, terms = c('Up3OnBradySum_Delta','putamen')) %>%
   plot() +
   labs(x = 'MDS-UPDRS III bradykinetic-rigid (progression)', y = 'Estimated marginal means') +
+  theme_bw()
+ggemmeans(mm, terms = c('z_MoCA__total_Delta','putamen')) %>%
+  plot() +
+  labs(x = 'MoCA (z; progression)', y = 'Estimated marginal means') +
   theme_bw()
 ```
 
 ### Selection-related activity ~ Motor severity
 
-```{r, echo=F}
+```{r, echo=F, eval=F}
 # cols <- c('Up3OnBradySum_T0','z_MoCA__total_T0','LEDD_T0',
 #           'con_0007_ba_p','con_0007_ba_a',
 #           'con_0007_ba_p_r','con_0007_ba_a_r',
@@ -169,19 +827,26 @@ ggemmeans(mm, terms = c('Up3OnBradySum_Delta','putamen','hemisphere')) %>%
 #   theme(legend.position = 'none')
 # print(g)
 
-mm <- lmer(beta_ba ~ Up3OnBradySum_T0*putamen*hemisphere + Age + Gender + NpsEducYears + YearsSinceDiag + (1+putamen+hemisphere|pseudonym),
+tmp <- df_fsl_l_07 %>%
+  filter(hemisphere=='l')
+
+mm <- lmer(beta_ba ~ Up3OnBradySum_T0*putamen + z_MoCA__total_T0*putamen + Age + Gender + NpsEducYears + YearsSinceDiag + (1|pseudonym),
            control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
-           data = df_l_07)
+           data = tmp)
 Anova(mm,type=3) %>% print()
-ggemmeans(mm, terms = c('Up3OnBradySum_T0','putamen','hemisphere')) %>%
+ggemmeans(mm, terms = c('Up3OnBradySum_T0','putamen')) %>%
   plot() +
   labs(x = 'MDS-UPDRS III bradykinetic-rigid (baseline)', y = 'Estimated marginal means') +
+  theme_bw()
+ggemmeans(mm, terms = c('z_MoCA__total_T0','putamen')) %>%
+  plot() +
+  labs(x = 'MoCA (baseline)', y = 'Estimated marginal means') +
   theme_bw()
 ```
 
 ### Change in motor-related activity ~ Motor progression
 
-```{r, echo=F}
+```{r, echo=F, eval=F}
 # cols <- c('Up3OnBradySum_Delta','z_MoCA__total_Delta','LEDD_Delta',
 #           'con_0010_delta_p','con_0010_delta_a',
 #           'con_0010_delta_p_r','con_0010_delta_a_r',
@@ -195,19 +860,26 @@ ggemmeans(mm, terms = c('Up3OnBradySum_T0','putamen','hemisphere')) %>%
 #   theme(legend.position = 'none')
 # print(g)
 
-mm <- lmer(beta_delta ~ Up3OnBradySum_Delta*putamen*hemisphere + Up3OnBradySum_T0 + beta_ba + Age + Gender + NpsEducYears + YearsSinceDiag + (1+putamen|pseudonym),
+tmp <- df_fsl_l_10 %>%
+  filter(hemisphere=='l')
+
+mm <- lmer(beta_delta ~ Up3OnBradySum_Delta*putamen + z_MoCA__total_Delta*putamen + Up3OnBradySum_T0 + z_MoCA__total_T0 + beta_ba + Age + Gender + NpsEducYears + YearsSinceDiag + (1|pseudonym),
            control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
-           data = df_l_10)
+           data = tmp)
 Anova(mm,type=3) %>% print()
-ggemmeans(mm, terms = c('Up3OnBradySum_Delta','putamen','hemisphere')) %>%
+ggemmeans(mm, terms = c('Up3OnBradySum_Delta','putamen')) %>%
   plot() +
   labs(x = 'MDS-UPDRS III bradykinetic-rigid', y = 'Estimated marginal means') +
+  theme_bw()
+ggemmeans(mm, terms = c('z_MoCA__total_Delta','putamen')) %>%
+  plot() +
+  labs(x = 'MoCA', y = 'Estimated marginal means') +
   theme_bw()
 ```
 
 ### Motor-related activity ~ Motor severity
 
-```{r, echo=F}
+```{r, echo=F, eval=F}
 # cols <- c('Up3OnBradySum_T0','z_MoCA__total_T0','LEDD_T0',
 #           'con_0010_ba_p','con_0010_ba_a',
 #           'con_0010_ba_p_r','con_0010_ba_a_r',
@@ -221,12 +893,19 @@ ggemmeans(mm, terms = c('Up3OnBradySum_Delta','putamen','hemisphere')) %>%
 #   theme(legend.position = 'none')
 # print(g)
 
-mm <- lmer(beta_ba ~ Up3OnBradySum_T0*putamen*hemisphere + Age + Gender + NpsEducYears + YearsSinceDiag + (1+putamen+hemisphere|pseudonym),
+tmp <- df_fsl_l_10 %>%
+  filter(hemisphere=='l')
+
+mm <- lmer(beta_ba ~ Up3OnBradySum_T0*putamen + z_MoCA__total_T0*putamen + Age + Gender + NpsEducYears + YearsSinceDiag + (1|pseudonym),
            control = lmerControl(optimizer = 'bobyqa', optCtrl=list(maxfun=2e5)),
-           data = df_l_10)
+           data = tmp)
 Anova(mm,type=3) %>% print()
-ggemmeans(mm, terms = c('Up3OnBradySum_T0','putamen','hemisphere')) %>%
+ggemmeans(mm, terms = c('Up3OnBradySum_T0','putamen')) %>%
   plot() +
   labs(x = 'MDS-UPDRS III bradykinetic-rigid (baseline)', y = 'Estimated marginal means') +
+  theme_bw()
+ggemmeans(mm, terms = c('z_MoCA__total_T0','putamen')) %>%
+  plot() +
+  labs(x = 'MoCA (baseline)', y = 'Estimated marginal means') +
   theme_bw()
 ```
