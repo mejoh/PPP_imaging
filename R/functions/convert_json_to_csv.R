@@ -57,10 +57,10 @@ convert_json_to_csv <- function(bidsdir, subject, visit, outputname){
                           colnames(json) <- varname
                   }
           }else if(str_detect(fSubsetFiles[i],'DD_Johansson2023')){
-                  json <- read.table(fSubsetFiles[i])
+                  json <- read_lines(fSubsetFiles[i])
+                  json <- as_tibble(json)
                   cn <- basename(fSubsetFiles[i]) %>% str_replace(., '\\..*','')
                   colnames(json) <- cn
-                  json <- as_tibble(json)
           }else{
                   json <- jsonlite::read_json(fSubsetFiles[i])
           }

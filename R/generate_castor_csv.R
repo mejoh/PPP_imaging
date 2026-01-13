@@ -1,7 +1,9 @@
-generate_castor_csv <- function(bidsdir='/project/3022026.01/pep/ClinVars_14-03-2025', outputdir=paste(bidsdir,'derivatives',sep='/'), force=FALSE, intermediate_output=TRUE){
+generate_castor_csv <- function(bidsdir='/Volumes/project/3022026.01/pep/ClinVars_2025_09_01', outputdir=paste(bidsdir,'derivatives',sep='/'), force=FALSE, intermediate_output=TRUE){
 
+        script_dir <- "/Users/marjoh/Documents/work/code/PPP_imaging/R"
         library(tidyverse)
-        library(tidyjson)
+        #library(tidyjson)
+        library(jsonlite)
         library(lubridate)
         
         # bidsdir <- 'P:/3022026.01/pep/ClinVars'
@@ -15,7 +17,7 @@ generate_castor_csv <- function(bidsdir='/project/3022026.01/pep/ClinVars_14-03-
         }
         
         ##### JSON-to-CSV conversion #####
-        source('/home/sysneu/marjoh/scripts/Personalized-Parkinson-Project-Motor/R/functions/convert_json_to_csv.R')
+        source(str_c(script_dir, '/functions/convert_json_to_csv.R'))
         subjects <- dir(bidsdir, 'sub-.*')
         # set.seed(1234)
         # sample.int(length(subjects), 10)
@@ -30,11 +32,11 @@ generate_castor_csv <- function(bidsdir='/project/3022026.01/pep/ClinVars_14-03-
         }
         
         ##### Variable documentation #####
-        source('/home/sysneu/marjoh/scripts/Personalized-Parkinson-Project-Motor/R/functions/write_colnames_list.R')
+        source(str_c(script_dir, '/functions/write_colnames_list.R'))
         write_colnames_list(tmpdir)
         
         ##### Read converted CSV files to data frame and write to file #####
-        source('/home/sysneu/marjoh/scripts/Personalized-Parkinson-Project-Motor/R/functions/merge_csv_to_file.R')
+        source(str_c(script_dir, '/functions/merge_csv_to_file.R'))
         fps <- dir(paste(tmpdir,sep='/'), 'sub.*.json2csv', full.names = TRUE)
         merged_csv_file <- paste(outputdir, '/merged_', today(), '.csv', sep='')
         merge_csv_to_file(fps, merged_csv_file)
@@ -45,7 +47,7 @@ generate_castor_csv <- function(bidsdir='/project/3022026.01/pep/ClinVars_14-03-
         }
         
         ##### Manipulate castor csv file #####
-        source('/home/sysneu/marjoh/scripts/Personalized-Parkinson-Project-Motor/R/functions/manipulate_castor_csv.R')
+        source(str_c(script_dir, '/functions/manipulate_castor_csv.R'))
         manipulate_castor_csv(merged_csv_file)
         
 
