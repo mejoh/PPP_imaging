@@ -4,8 +4,8 @@ library(tidyverse)
 # dPEP_HomeQuest <- 'P:/3022026.01/pep/download2/'
 # dPEP_Visit <- 'P:/3022026.01/pep/download2/'
 # dPEP_COVID <- 'P:/3022026.01/pep/download2/'
-dPEP <- '/Volumes/project/3022026.01/pep/download_ClinVars_2025_09_01'
-dClinVars <- '/Volumes/project/3022026.01/pep/ClinVars_2025_09_01'
+dPEP <- '/project/3022026.01/pep/download_ClinVars_2025_09_01'
+dClinVars <- '/project/3022026.01/pep/ClinVars_2025_09_01'
 
 # Clean out output directory
 force = FALSE
